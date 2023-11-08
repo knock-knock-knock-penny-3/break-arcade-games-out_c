@@ -41,8 +41,8 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
 }
 
 void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
-    p.x += game->width / 2;
-    p.y += game->height / 2;
+    p.x += game->width * .5f;
+    p.y += game->height * .5f;
 
     int x0 = (int)(p.x - half_size.x);
     int y0 = (int)(p.y - half_size.y);
