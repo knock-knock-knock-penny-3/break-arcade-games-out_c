@@ -7,6 +7,7 @@
 #include "software_rendering.h"
 #include "platform_common.h"
 #include "game.h"
+#include "collision.h"
 
 #define WINDOW_TITLE    "Breakout"
 #define SCREEN_WIDTH    1280
