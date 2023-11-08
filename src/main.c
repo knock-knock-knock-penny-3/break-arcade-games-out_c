@@ -47,8 +47,14 @@ int main() {
 
         const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-        input.buttons[BUTTON_LEFT].changed = state[SDL_SCANCODE_LEFT] != input.buttons[BUTTON_LEFT].is_down;
-        input.buttons[BUTTON_LEFT].is_down = state[SDL_SCANCODE_LEFT];
+#define process_button(vk, b) \
+input.buttons[b].changed = state[vk] != input.buttons[b].is_down;\
+input.buttons[b].is_down = state[vk];
+
+        process_button(SDL_SCANCODE_LEFT, BUTTON_LEFT);
+        process_button(SDL_SCANCODE_RIGHT, BUTTON_RIGHT);
+        process_button(SDL_SCANCODE_UP, BUTTON_UP);
+        process_button(SDL_SCANCODE_DOWN, BUTTON_DOWN);
 
         // Simulation
         simulate_game(&game, &input);

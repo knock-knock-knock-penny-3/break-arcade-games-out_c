@@ -18,4 +18,8 @@ typedef struct {
     Button buttons[BUTTON_COUNT];
 } Input;
 
+#define pressed(b) (input->buttons[b].is_down && input->buttons[b].changed)
+#define released(b) (!input->buttons[b].is_down && input->buttons[b].changed)
+#define is_down(b) (input->buttons[b].is_down)
+
 #endif // BREAKOUT_PLATFORM_COMMON_H_INCLUDED
