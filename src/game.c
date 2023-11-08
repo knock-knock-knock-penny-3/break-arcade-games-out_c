@@ -9,6 +9,8 @@ v2 player_p;
 v2 player_dp;
 v2 player_half_size;
 
+v2 arena_half_size;
+
 b32 initialized = false;
 
 void simulate_game(Game *game, Input *input, f64 dt) {
@@ -20,6 +22,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         player_p.y = -40;
         player_half_size = (v2){10, 2};
+
+        arena_half_size = (v2){80, 50};
     }
 
     f32 player_new_x = pixels_to_world(game, input->mouse).x;
@@ -31,9 +35,16 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if (ball_dp.y < 0 && aabb_vs_aabb(player_p, player_half_size, ball_p, ball_half_size)) {
         ball_dp.x += player_dp.x;
         ball_dp.y *= -1;
+    } else if (ball_p.x + ball_half_size.x > arena_half_size.x) {
+        ball_p.x = arena_half_size.x - ball_half_size.x;
+        ball_dp.x *= -1;
+    } else if (ball_p.x - ball_half_size.x < -arena_half_size.x) {
+        ball_p.x = -arena_half_size.x + ball_half_size.x;
+        ball_dp.x *= -1;
     }
 
-    clear_screen(game, 0xFF551100);
+    clear_screen(game, 0xFF220500);
+    draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100);
     draw_rect(game, ball_p, ball_half_size, 0xFF00FFFF);
     draw_rect(game, player_p, player_half_size, 0xFF00FF00);
 }
