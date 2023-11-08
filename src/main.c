@@ -22,6 +22,8 @@ int main() {
     game.width = SCREEN_WIDTH;
     game.height = SCREEN_HEIGHT;
 
+    b32 character = false;
+
     while (running) {
         // Input
         SDL_Event event;
@@ -39,9 +41,12 @@ int main() {
             }
         }
 
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+        character = state[SDL_SCANCODE_LEFT];
+
         // Simulation
-        clear_screen(&game, 0xFF551100);
-        draw_rect_in_pixels(&game, 50, 50, 150, 200, 0xFFFFFF00);
+        simulate_game(&game, character);
 
         // Render
         SDL_RenderPresent(game.renderer);
