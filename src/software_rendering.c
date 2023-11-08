@@ -41,6 +41,20 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
 }
 
 void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
+    f32 aspect_multiplier = game->height;
+    f32 ratio = 16 / 9;
+
+    if (game->width / game->height < ratio) {
+        aspect_multiplier = game->width / ratio;
+    }
+
+    f32 scale = 0.01f;
+    half_size.x *= aspect_multiplier * scale;
+    half_size.y *= aspect_multiplier * scale;
+
+    p.x *= aspect_multiplier * scale;
+    p.y *= aspect_multiplier * scale;
+
     p.x += game->width * .5f;
     p.y += game->height * .5f;
 
