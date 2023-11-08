@@ -31,9 +31,24 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="main.c">
+		<Unit filename="src/game.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/game.h" />
+		<Unit filename="src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/main.h" />
+		<Unit filename="src/math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/math.h" />
+		<Unit filename="src/platform_common.h" />
+		<Unit filename="src/software_rendering.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/software_rendering.h" />
+		<Unit filename="src/utils.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

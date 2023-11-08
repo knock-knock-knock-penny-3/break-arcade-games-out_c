@@ -7,7 +7,7 @@ typedef struct {
             f32 x, y;
         };
         f32 e[2];
-    }
+    };
 } v2;
 
 // PROTOTYPES
