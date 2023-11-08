@@ -40,7 +40,8 @@ int main() {
         }
 
         // Simulation
-
+        clear_screen(&game, 0xFF551100);
+        draw_rect_in_pixels(&game, 50, 50, 150, 200, 0xFFFFFF00);
 
         // Render
         SDL_RenderPresent(game.renderer);

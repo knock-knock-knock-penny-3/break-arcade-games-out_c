@@ -33,4 +33,8 @@ typedef struct {
     SDL_Renderer *renderer;
 } Game;
 
+typedef struct {
+    int r, g, b, a;
+} RGBA;
+
 #endif // BREAKOUT_UTILS_H_INCLUDED

@@ -1,0 +1,7 @@
+#ifndef BREAKOUT_MATH_H_INCLUDED
+#define BREAKOUT_MATH_H_INCLUDED
+
+// PROTOTYPES
+int clamp(int, int, int);
+
+#endif // BREAKOUT_MATH_H_INCLUDED

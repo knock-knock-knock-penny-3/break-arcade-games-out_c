@@ -3,6 +3,8 @@
 
 #include "SDL2/SDL.h"
 #include "utils.h"
+#include "math.h"
+#include "software_rendering.h"
 
 #define WINDOW_TITLE    "Breakout"
 #define SCREEN_WIDTH    1280
