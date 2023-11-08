@@ -42,6 +42,12 @@ int main() {
                     }
                     running = false;
                     break;
+//                case SDL_WINDOWEVENT:
+//                    if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+//                        game.width = event.window.data1;
+//                        game.height = event.window.data1;
+//                    }
+//                    break;
             }
         }
 

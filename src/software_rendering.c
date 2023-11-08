@@ -39,3 +39,15 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
     SDL_Rect rect = {x0, game->height-y1, x1-x0, y1-y0};
     SDL_RenderFillRect(game->renderer, &rect);
 }
+
+void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
+    p.x += game->width / 2;
+    p.y += game->height / 2;
+
+    int x0 = (int)(p.x - half_size.x);
+    int y0 = (int)(p.y - half_size.y);
+    int x1 = (int)(p.x + half_size.x);
+    int y1 = (int)(p.y + half_size.y);
+
+    draw_rect_in_pixels(game, x0, y0, x1, y1, color);
+}

@@ -1,17 +1,16 @@
 #include "main.h"
 #include "game.h"
 
-int px = 20;
-int py = 20;
+v2 player_p;
 int step = 20;
 
 void simulate_game(Game *game, Input *input) {
     clear_screen(game, 0xFF551100);
 
-    if (pressed(BUTTON_LEFT)) px -= step;
-    if (pressed(BUTTON_RIGHT)) px += step;
-    if (pressed(BUTTON_UP)) py += step;
-    if (pressed(BUTTON_DOWN)) py -= step;
+    if (pressed(BUTTON_LEFT)) player_p.x -= step;
+    if (pressed(BUTTON_RIGHT)) player_p.x += step;
+    if (pressed(BUTTON_UP)) player_p.y += step;
+    if (pressed(BUTTON_DOWN)) player_p.y -= step;
 
-    draw_rect_in_pixels(game, px, py, px+30, py+30, 0xFFFFFF00);
+    draw_rect(game, player_p, (v2){10, 10}, 0xFF00FF00);
 }
