@@ -21,5 +21,7 @@ typedef struct {
 
 // PROTOTYPES
 int clamp(int, int, int);
+extern v2 add_v2(v2, v2);
+extern v2 mul_v2(v2, f32);
 
 #endif // BREAKOUT_MATH_H_INCLUDED
