@@ -3,6 +3,7 @@
 
 int main() {
     SDL_Window *window;
+    Game game;
 
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -14,6 +15,12 @@ int main() {
                                 SCREEN_HEIGHT,              // height, in pixels
                                 SDL_WINDOW_RESIZABLE        // flags
                             );
+
+    game.renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_RenderSetLogicalSize(game.renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    game.width = SCREEN_WIDTH;
+    game.height = SCREEN_HEIGHT;
 
     while (running) {
         // Input
@@ -36,9 +43,10 @@ int main() {
 
 
         // Render
-
+        SDL_RenderPresent(game.renderer);
     }
 
+    SDL_DestroyRenderer(game.renderer);
     SDL_DestroyWindow(window);
 
     SDL_Quit();
