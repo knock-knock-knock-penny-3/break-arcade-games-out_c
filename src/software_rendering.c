@@ -2,6 +2,8 @@
 #include "main.h"
 #include "software_rendering.h"
 
+f32 scale = 0.01f;
+
 RGBA color_converter(u32 hexValue) {
     RGBA rgba;
 
@@ -36,11 +38,27 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
     y0 = clamp(0, y0, game->height);
     y1 = clamp(0, y1, game->height);
 
-    SDL_Rect rect = {x0, game->height-y1, x1-x0, y1-y0};
+    SDL_Rect rect = {x0, game->height - y1, x1-x0, y1-y0};
     SDL_RenderFillRect(game->renderer, &rect);
 }
 
-void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
+v2 pixels_to_world(Game *game, v2i pixels_coord) {
+    f32 aspect_multiplier = calculate_aspect_multiplier(game);
+
+    v2 result;
+    result.x = (f32)pixels_coord.x - (game->width * .5f);
+    result.y = (f32)pixels_coord.y - (game->height * .5f);
+
+    result.x /= aspect_multiplier;
+    result.x /= scale;
+
+    result.y /= aspect_multiplier;
+    result.y /= scale;
+
+    return result;
+}
+
+f32 calculate_aspect_multiplier(Game *game) {
     f32 aspect_multiplier = game->height;
     f32 ratio = 16 / 9;
 
@@ -48,7 +66,12 @@ void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
         aspect_multiplier = game->width / ratio;
     }
 
-    f32 scale = 0.01f;
+    return aspect_multiplier;
+}
+
+void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
+    f32 aspect_multiplier = calculate_aspect_multiplier(game);
+
     half_size.x *= aspect_multiplier * scale;
     half_size.y *= aspect_multiplier * scale;
 

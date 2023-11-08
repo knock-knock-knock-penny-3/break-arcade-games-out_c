@@ -10,6 +10,15 @@ typedef struct {
     };
 } v2;
 
+typedef struct {
+    union {
+        struct {
+            int x, y;
+        };
+        int e[2];
+    };
+} v2i;
+
 // PROTOTYPES
 int clamp(int, int, int);
 

@@ -75,6 +75,9 @@ input.buttons[b].is_down = state[vk];
         process_button(SDL_SCANCODE_UP, BUTTON_UP);
         process_button(SDL_SCANCODE_DOWN, BUTTON_DOWN);
 
+        SDL_GetMouseState(&input.mouse.x,&input.mouse.y);
+        input.mouse.y = game.height - input.mouse.y;
+
         // Simulation
         simulate_game(&game, &input, last_dt);
 
