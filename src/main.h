@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "math.h"
 #include "software_rendering.h"
+#include "platform_common.h"
 #include "game.h"
 
 #define WINDOW_TITLE    "Breakout"

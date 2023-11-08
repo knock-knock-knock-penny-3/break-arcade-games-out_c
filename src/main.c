@@ -22,10 +22,14 @@ int main() {
     game.width = SCREEN_WIDTH;
     game.height = SCREEN_HEIGHT;
 
-    b32 character = false;
+    Input input = {0};
 
     while (running) {
         // Input
+        for (int i = 0; i < BUTTON_COUNT; i++) {
+            input.buttons[i].changed = false;
+        }
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -43,10 +47,11 @@ int main() {
 
         const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-        character = state[SDL_SCANCODE_LEFT];
+        input.buttons[BUTTON_LEFT].changed = state[SDL_SCANCODE_LEFT] != input.buttons[BUTTON_LEFT].is_down;
+        input.buttons[BUTTON_LEFT].is_down = state[SDL_SCANCODE_LEFT];
 
         // Simulation
-        simulate_game(&game, character);
+        simulate_game(&game, &input);
 
         // Render
         SDL_RenderPresent(game.renderer);

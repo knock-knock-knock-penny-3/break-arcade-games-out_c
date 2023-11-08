@@ -2,6 +2,6 @@
 #define BREAKOUT_GAME_H_INCLUDED
 
 // PROTOTYPES
-void simulate_game(Game *, b32);
+void simulate_game(Game *, Input *);
 
 #endif // BREAKOUT_GAME_H_INCLUDED

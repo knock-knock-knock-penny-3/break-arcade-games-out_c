@@ -1,3 +1,4 @@
+#include "SDL2/SDL.h"
 #include "main.h"
 #include "software_rendering.h"
 
