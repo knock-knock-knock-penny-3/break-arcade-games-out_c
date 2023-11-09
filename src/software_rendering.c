@@ -12,7 +12,6 @@ RGBA color_converter(u32 hexValue) {
     rgba.g = ((hexValue >> 8) & 0xFF);
     rgba.b = (hexValue & 0xFF);
 
-//    printf("%d, %d, %d, %d\n", a, r, g, b);
     return rgba;
 }
 

@@ -3,8 +3,8 @@
 
 typedef struct {
     v2 p;
-    v2 block_size;
     int life;
+    u32 color;
 } Block;
 
 // PROTOTYPES

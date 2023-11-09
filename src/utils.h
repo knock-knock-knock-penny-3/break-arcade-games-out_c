@@ -37,4 +37,6 @@ typedef struct {
     int r, g, b, a;
 } RGBA;
 
+#define array_count(a) (sizeof(a) / sizeof(a[0]))
+
 #endif // BREAKOUT_UTILS_H_INCLUDED
