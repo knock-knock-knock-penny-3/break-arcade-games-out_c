@@ -28,7 +28,6 @@ void clear_screen(Game *game, u32 color) {
 
 void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) {
     RGBA rgba = color_converter(color);
-    SDL_Log("R: %d, G: %d, B: %d", rgba.r, rgba.g, rgba.b);
 
     // Set the drawing color
     SDL_SetRenderDrawColor(game->renderer, rgba.r, rgba.g, rgba.b, rgba.a);
@@ -88,4 +87,29 @@ void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
     int y1 = (int)(p.y + half_size.y);
 
     draw_rect_in_pixels(game, x0, y0, x1, y1, color);
+}
+
+void clear_screen_and_draw_rect(Game *game, v2 p, v2 half_size, u32 color, u32 clear_color) {
+    f32 aspect_multiplier = calculate_aspect_multiplier(game);
+
+    half_size.x *= aspect_multiplier * scale;
+    half_size.y *= aspect_multiplier * scale;
+
+    p.x *= aspect_multiplier * scale;
+    p.y *= aspect_multiplier * scale;
+
+    p.x += game->width * .5f;
+    p.y += game->height * .5f;
+
+    int x0 = (int)(p.x - half_size.x);
+    int y0 = (int)(p.y - half_size.y);
+    int x1 = (int)(p.x + half_size.x);
+    int y1 = (int)(p.y + half_size.y);
+
+    draw_rect_in_pixels(game, x0, y0, x1, y1, color);
+
+    draw_rect_in_pixels(game, 0, 0, x0, game->height, clear_color);           // left border
+    draw_rect_in_pixels(game, x1, 0, game->width, game->height, clear_color); // right border
+    draw_rect_in_pixels(game, x0, y1, x1, game->height, clear_color);         // top border
+    draw_rect_in_pixels(game, x0, 0, x1, y0, clear_color);                    // bottom border
 }

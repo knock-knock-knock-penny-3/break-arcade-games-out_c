@@ -51,7 +51,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     }
 
     clear_screen(game, 0xFF220500);
-    draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100);
+    clear_screen_and_draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100);
     draw_rect(game, ball_p, ball_half_size, 0xFF00FFFF);
     draw_rect(game, player_p, player_half_size, 0xFF00FF00);
 }
