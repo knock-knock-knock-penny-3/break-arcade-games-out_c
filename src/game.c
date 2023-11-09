@@ -23,7 +23,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         player_p.y = -40;
         player_half_size = (v2){10, 2};
 
-        arena_half_size = (v2){80, 50};
+        arena_half_size = (v2){85, 45};
     }
 
     f32 player_new_x = pixels_to_world(game, input->mouse).x;
@@ -33,7 +33,9 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     ball_p = add_v2(ball_p, mul_v2(ball_dp, dt));
 
     if (ball_dp.y < 0 && aabb_vs_aabb(player_p, player_half_size, ball_p, ball_half_size)) {
-        ball_dp.x += player_dp.x;
+        // player collision with ball
+        ball_p.y = player_p.y + player_half_size.y;
+        ball_dp.x += player_dp.x * .5f;
         ball_dp.y *= -1;
     } else if (ball_p.x + ball_half_size.x > arena_half_size.x) {
         ball_p.x = arena_half_size.x - ball_half_size.x;
@@ -41,6 +43,11 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     } else if (ball_p.x - ball_half_size.x < -arena_half_size.x) {
         ball_p.x = -arena_half_size.x + ball_half_size.x;
         ball_dp.x *= -1;
+    }
+
+    if (ball_p.y + ball_half_size.y > arena_half_size.y) {
+        ball_p.y = arena_half_size.y - ball_half_size.y;
+        ball_dp.y *= -1;
     }
 
     clear_screen(game, 0xFF220500);

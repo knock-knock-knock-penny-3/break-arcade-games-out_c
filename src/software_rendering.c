@@ -28,6 +28,7 @@ void clear_screen(Game *game, u32 color) {
 
 void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) {
     RGBA rgba = color_converter(color);
+    SDL_Log("R: %d, G: %d, B: %d", rgba.r, rgba.g, rgba.b);
 
     // Set the drawing color
     SDL_SetRenderDrawColor(game->renderer, rgba.r, rgba.g, rgba.b, rgba.a);
