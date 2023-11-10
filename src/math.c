@@ -19,6 +19,10 @@ inline v2 mul_v2(v2 a, f32 s) {
     return (v2){a.x * s, a.y * s};
 }
 
+inline v2 div_v2(v2 a, f32 s) {
+    return (v2){a.x / s, a.y / s};
+}
+
 u32 make_color_from_grey(u8 grey) {
     return (grey << 0) | (grey << 8) | (grey << 16) | (0xFF << 24);
 }
@@ -32,4 +36,11 @@ inline f32 absf(f32 a) {
         return -a;
     }
     return a;
+}
+
+inline f32 min(f32 a, f32 b) {
+    if (a < b) {
+        return a;
+    }
+    return b;
 }
