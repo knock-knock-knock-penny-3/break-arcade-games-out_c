@@ -20,11 +20,20 @@ b32 initialized = false;
 b32 first_ball_movement = true;
 b32 slowmotion = false;
 
+void start_game() {
+    initialized = false;
+    first_ball_movement = true;
+
+    next_block = 0; //@Incomplete: reset the blocks here
+}
+
 void simulate_game(Game *game, Input *input, f64 dt) {
     if (!initialized) {
         initialized = true;
         ball_base_speed = -50;
+        ball_p.x = 0;
         ball_p.y = 40;
+        ball_dp.x = 0;
         ball_dp.y = ball_base_speed;
         ball_half_size = (v2){.75, .75};
         ball_speed_multiplier = 1.f;
@@ -92,11 +101,6 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         // Top border
         ball_desired_p.y = arena_half_size.y - ball_half_size.y;
         ball_dp.y *= -1;
-    } else if (ball_desired_p.y - ball_half_size.y < -arena_half_size.y) {
-        // Bottom border
-        //@DEBUG: Invincibility
-//        ball_desired_p.y = -arena_half_size.y + ball_half_size.y;
-//        ball_dp.y *= -1;
     }
 
     clear_screen_and_draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100, 0xFF220500);
@@ -171,6 +175,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     draw_rect(game, ball_p, ball_half_size, 0xFF00FFFF);
     draw_rect(game, player_p, player_half_size, 0xFF00FF00);
+
+    if (ball_p.y - ball_half_size.y < -50) {
+        // Bottom border
+        //@DEBUG: Invincibility
+//        ball_p.y = -arena_half_size.y + ball_half_size.y;
+//        ball_dp.y *= -1;
+        start_game();
+    }
 }
 
 void set_slowmotion(b32 sl) {

@@ -62,6 +62,11 @@ int main() {
                         SDL_RenderSetLogicalSize(game.renderer, game.width, game.height);
                     }
                     break;
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym == SDLK_r) {
+                        start_game();
+                    }
+                    break;
             }
         }
 
