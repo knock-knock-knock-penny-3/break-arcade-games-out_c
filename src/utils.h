@@ -39,4 +39,12 @@ typedef struct {
 
 #define array_count(a) (sizeof(a) / sizeof(a[0]))
 
+#if DEVELOPMENT
+#define assert(c) {if (!c) {*(int*)0=0;}else{}}
+#else
+#define assert(c)
+#endif
+
+#define invalid_default_case default: {assert(0)}
+
 #endif // BREAKOUT_UTILS_H_INCLUDED

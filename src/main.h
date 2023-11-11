@@ -9,7 +9,11 @@
 #include "game.h"
 #include "collision.h"
 
+#if DEVELOPMENT
+#define WINDOW_TITLE    "Breakout - DEVELOPMENT"
+#else
 #define WINDOW_TITLE    "Breakout"
+#endif
 #define SCREEN_WIDTH    1280
 #define SCREEN_HEIGHT   720
 

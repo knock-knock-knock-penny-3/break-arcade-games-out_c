@@ -9,6 +9,17 @@ typedef struct {
     u32 color;
 } Block;
 
+typedef enum {
+    GM_NORMAL,
+    GM_WALL,
+    GM_CONSTRUCTION,
+    GM_SPACED,
+
+    GM_PONG,
+
+    GM_COUNT,
+} Game_Modes;
+
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);
 void set_slowmotion(b32);

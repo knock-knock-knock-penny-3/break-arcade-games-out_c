@@ -107,6 +107,9 @@ void clear_screen_and_draw_rect(Game *game, v2 p, v2 half_size, u32 color, u32 c
 
     draw_rect_in_pixels(game, x0, y0, x1, y1, color);
 
+#if DEVELOPMENT
+    clear_color = 0xFF665944;
+#endif
     draw_rect_in_pixels(game, 0, 0, x0, game->height, clear_color);           // left border
     draw_rect_in_pixels(game, x1, 0, game->width, game->height, clear_color); // right border
     draw_rect_in_pixels(game, x0, y1, x1, game->height, clear_color);         // top border

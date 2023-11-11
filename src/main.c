@@ -47,26 +47,30 @@ int main() {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_WINDOWEVENT_CLOSE:
-                case SDL_QUIT:
+                case SDL_QUIT: {
                     if (window) {
                         // Close and destroy the window
                         SDL_DestroyWindow(window);
                         window = NULL;
                     }
                     running = false;
-                    break;
-                case SDL_WINDOWEVENT:
+                } break;
+
+                case SDL_WINDOWEVENT: {
                     if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
                         game.width = event.window.data1;
                         game.height = event.window.data2;
                         SDL_RenderSetLogicalSize(game.renderer, game.width, game.height);
                     }
-                    break;
-                case SDL_KEYDOWN:
+                } break;
+
+#if DEVELOPMENT
+                case SDL_KEYDOWN: {
                     if (event.key.keysym.sym == SDLK_r) {
                         start_game();
                     }
-                    break;
+                } break;
+#endif
             }
         }
 
@@ -81,7 +85,9 @@ input.buttons[b].is_down = state[vk];
         process_button(SDL_SCANCODE_UP, BUTTON_UP);
         process_button(SDL_SCANCODE_DOWN, BUTTON_DOWN);
 
+#if DEVELOPMENT
         set_slowmotion(state[SDL_SCANCODE_SPACE]);
+#endif
 
         SDL_GetMouseState(&input.mouse.x,&input.mouse.y);
         input.mouse.y = game.height - input.mouse.y;

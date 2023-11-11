@@ -30,6 +30,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-DDEVELOPMENT" />
 		</Compiler>
 		<Unit filename="src/collision.c">
 			<Option compilerVar="CC" />
