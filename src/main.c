@@ -67,7 +67,7 @@ int main() {
 #if DEVELOPMENT
                 case SDL_KEYDOWN: {
                     if (event.key.keysym.sym == SDLK_r) {
-                        start_game();
+                        start_game(0);
                     }
                 } break;
 #endif

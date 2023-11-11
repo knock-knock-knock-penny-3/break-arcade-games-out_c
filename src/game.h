@@ -23,5 +23,6 @@ typedef enum {
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);
 void set_slowmotion(b32);
+extern void start_game(Game_Modes);
 
 #endif // BREAKOUT_GAME_H_INCLUDED

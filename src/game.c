@@ -13,7 +13,7 @@ v2 player_half_size;
 
 Block blocks[256];
 int num_blocks;
-int next_block;
+int blocks_destroyed;
 
 v2 arena_half_size;
 b32 first_ball_movement = true;
@@ -22,6 +22,9 @@ b32 initialized = false;
 Game_Modes current_game_mode;
 #if DEVELOPMENT
 b32 slowmotion = false;
+b32 invincible = false;
+f32 dt_multiplier = 1.f;
+b32 advance_game_mode = false;
 #endif
 
 void create_block_block(int num_x, int num_y, f32 spacing) {
@@ -31,9 +34,9 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
 
     for (int y = 0; y < num_y; y++) {
         for (int x = 0; x < num_x; x++) {
-            Block *block = blocks + next_block++;
-            if (next_block >= array_count(blocks)) {
-                next_block = 0;
+            Block *block = blocks + num_blocks++;
+            if (num_blocks >= array_count(blocks)) {
+                num_blocks = 0;
             }
 
             block->life = 1;
@@ -47,13 +50,21 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
     }
 }
 
-void start_game(Game_Modes game_mode) {
+internal void test_for_win_condition() {
+    blocks_destroyed++;
+    if (blocks_destroyed == num_blocks) {
+        advance_game_mode = true;
+    }
+}
+
+inline void start_game(Game_Modes game_mode) {
     if (game_mode >= GM_COUNT) game_mode = 0;
     else if (game_mode < 0) game_mode = GM_COUNT - 1;
 
     current_game_mode = game_mode;
 
     first_ball_movement = true;
+    advance_game_mode = false;
     ball_base_speed = -50;
     ball_p.x = 0;
     ball_p.y = 40;
@@ -67,7 +78,8 @@ void start_game(Game_Modes game_mode) {
 
     arena_half_size = (v2){85, 45};
 
-    next_block = 0;
+    num_blocks = 0;
+    blocks_destroyed = 0;
     for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         block->life = 0;
     }
@@ -85,7 +97,7 @@ void start_game(Game_Modes game_mode) {
             f32 y_offset = -4.f;
             for (int y = 0; y < num_y; y++) {
                 for (int x = 0; x < num_x; x++) {
-                    Block *block = blocks+num_blocks++;
+                    Block *block = blocks + num_blocks++;
                     if (num_blocks >= array_count(blocks)) {
                         num_blocks = 0;
                     }
@@ -137,10 +149,10 @@ void start_game(Game_Modes game_mode) {
 
             for (int y = 0; y < num_y; y++) {
                 for (int x = 0; x < num_x; x++) {
-                    Block *block = blocks + next_block++;
+                    Block *block = blocks + num_blocks++;
 
-                    if (next_block >= array_count(blocks)) {
-                        next_block = 0;
+                    if (num_blocks >= array_count(blocks)) {
+                        num_blocks = 0;
                     }
 
                     block->life = 1;
@@ -165,6 +177,8 @@ void start_game(Game_Modes game_mode) {
 }
 
 void simulate_game(Game *game, Input *input, f64 dt) {
+    dt *= dt_multiplier;
+
     if (!initialized) {
         initialized = true;
         current_game_mode = 0;
@@ -236,6 +250,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                             ball_dp.y = -ball_base_speed * ball_speed_multiplier;
                         }
                         block->life--;
+                        test_for_win_condition();
                     }
                 }
             }
@@ -263,6 +278,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                             ball_dp.y = ball_base_speed * ball_speed_multiplier;
                         }
                         block->life--;
+                        test_for_win_condition();
                     }
                 }
             }
@@ -282,17 +298,27 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         // Bottom border
 #if DEVELOPMENT
         // Invincibility
-//        ball_p.y = -arena_half_size.y + ball_half_size.y;
-//        ball_dp.y *= -1;
+        if (invincible) {
+            ball_p.y = -arena_half_size.y + ball_half_size.y;
+            ball_dp.y *= -1;
+        } else {
 #endif
-        current_game_mode = 0;
-        start_game(current_game_mode);
+            current_game_mode = 0;
+            start_game(current_game_mode);
+#if DEVELOPMENT
+        }
+#endif
     }
 
 #if DEVELOPMENT
     if pressed(BUTTON_LEFT) start_game(current_game_mode - 1);
     if pressed(BUTTON_RIGHT) start_game(current_game_mode + 1);
+    if pressed(BUTTON_UP) invincible = true;
+    if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
+    if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
+
+    if (advance_game_mode) start_game(current_game_mode + 1);
 }
 
 void set_slowmotion(b32 sl) {
