@@ -19,31 +19,29 @@ v2 arena_half_size;
 b32 first_ball_movement = true;
 
 b32 initialized = false;
-Game_Modes current_game_mode;
-Game_Mode_State game_mode_state;
+
+Powerup powerups[16];
+int next_powerup;
+//f32 invincibility_time;
+//int number_of_triple_shots;
+
+Level current_level;
 #if DEVELOPMENT
 b32 slowmotion = false;
 b32 invincible = false;
 f32 dt_multiplier = 1.f;
-b32 advance_game_mode = false;
+b32 advance_level = false;
 #endif
 
-internal void simulate_game_mode(Game *game) {
-    switch (current_game_mode) {
-        case GM_WALL: {
-            for (Powerup *powerup = game_mode_state.powerups; powerup != game_mode_state.powerups + array_count(game_mode_state.powerups); powerup++) {
-                if (powerup->kind == POWERUP_INACTIVE) continue;
-                draw_rect(game, powerup->p, (v2){2, 2}, 0xFFFFFF00);
-            }
-        } break;
-    }
+internal void simulate_level(Game *game) {
+
 }
 
-internal void spawn_powerup(v2 p) {
-    Powerup *powerup = game_mode_state.powerups + game_mode_state.next_powerup++;
-    if (game_mode_state.next_powerup >= array_count(game_mode_state.powerups)) game_mode_state.next_powerup = 0;
+internal void spawn_powerup(Powerup_Kind kind, v2 p) {
+    Powerup *powerup = powerups + next_powerup++;
+    if (next_powerup >= array_count(powerups)) next_powerup = 0;
     powerup->p = p;
-    powerup->kind = POWERUP_INVINCIBILITY;
+    powerup->kind = kind;
 }
 
 void create_block_block(int num_x, int num_y, f32 spacing) {
@@ -72,29 +70,32 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
 internal void block_destroyed(Block *block) {
     test_for_win_condition();
 
-    switch (current_game_mode) {
-        case GM_POWERUPS:
-        case GM_WALL: {
-            spawn_powerup(block->p);
-        } break;
+    if (block->powerup) {
+        spawn_powerup(block->powerup, block->p);
     }
 }
 
 inline void test_for_win_condition() {
     blocks_destroyed++;
     if (blocks_destroyed == num_blocks) {
-        advance_game_mode = true;
+        advance_level = true;
     }
 }
 
-inline void start_game(Game_Modes game_mode) {
-    advance_game_mode = false;
+inline void start_game(Level level) {
+    advance_level = false;
 
-    if (game_mode >= GM_COUNT) game_mode = 0;
-    else if (game_mode < 0) game_mode = GM_COUNT - 1;
+    SDL_Log("Level request: %d", level);
+    SDL_Log("%d > 0: %d", level, level > 0);
+    SDL_Log("%d == 0: %d", level, level == 0);
+    SDL_Log("%d < 0: %d\n\n", level, level < 0);
+    if (level >= L_COUNT) level = 0;
+    else if (level < 0) {
+        SDL_Log("Going to: %d", L_COUNT-1);
+        level = L_COUNT - 1;
+    }
 
-    current_game_mode = game_mode;
-    game_mode_state = (Game_Mode_State){0};
+    current_level = level;
 
     first_ball_movement = true;
     ball_base_speed = -50;
@@ -116,12 +117,12 @@ inline void start_game(Game_Modes game_mode) {
         block->life = 0;
     }
 
-    switch (game_mode) {
-        case GM_NORMAL: {
+    switch (level) {
+        case L01_NORMAL: {
             create_block_block(19, 9, .1f);
         } break;
 
-        case GM_WALL: {
+        case L02_WALL: {
             int num_x = 20;
             int num_y = 9;
             f32 block_x_half_size = 4.f;
@@ -147,7 +148,7 @@ inline void start_game(Game_Modes game_mode) {
             }
         } break;
 
-        case GM_CONSTRUCTION: {
+        case L03_STADIUM: {
             int num_x = 21;
             int num_y = 6;
             f32 block_x_half_size = 4.f;
@@ -172,15 +173,7 @@ inline void start_game(Game_Modes game_mode) {
             }
         } break;
 
-        case GM_SPACED: {
-            create_block_block(11, 6, 1.f);
-        } break;
-
-        case GM_POWERUPS: {
-
-        } break;
-
-        case GM_PONG: {
+        case L04_PONG: {
 
         } break;
 
@@ -193,8 +186,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     if (!initialized) {
         initialized = true;
-        current_game_mode = 0;
-        start_game(current_game_mode);
+        current_level = 0;
+        start_game(current_level);
     }
 //    SDL_Log("base\tmul\tspeed\n%f\t%f\t%f", ball_base_speed, ball_speed_multiplier, ball_dp.y);
 
@@ -299,11 +292,16 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         draw_rect(game, block->p, block->half_size, block->color);
     }
 
+    for (Powerup *powerup = powerups; powerup != powerups + array_count(powerups); powerup++) {
+        if (powerup->kind == POWERUP_INACTIVE) continue;
+        draw_rect(game, powerup->p, (v2){2, 2}, 0xFFFFFF00);
+    }
+
     ball_p = ball_desired_p;
     player_dp.x = (player_desired_p.x - player_p.x) / dt;
     player_p = player_desired_p;
 
-    simulate_game_mode(game);
+    simulate_level(game);
 
     draw_rect(game, ball_p, ball_half_size, 0xFF00FFFF);
 
@@ -319,22 +317,22 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             ball_dp.y *= -1;
         } else {
 #endif
-            current_game_mode = 0;
-            start_game(current_game_mode);
+            current_level = 0;
+            start_game(current_level);
 #if DEVELOPMENT
         }
 #endif
     }
 
 #if DEVELOPMENT
-    if pressed(BUTTON_LEFT) start_game(current_game_mode - 1);
-    if pressed(BUTTON_RIGHT) start_game(current_game_mode + 1);
+    if pressed(BUTTON_LEFT) start_game(current_level - 1);
+    if pressed(BUTTON_RIGHT) start_game(current_level + 1);
     if pressed(BUTTON_UP) invincible = true;
     if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
 
-    if (advance_game_mode) start_game(current_game_mode + 1);
+    if (advance_level) start_game(current_level + 1);
 }
 
 void set_slowmotion(b32 sl) {
