@@ -44,3 +44,10 @@ inline f32 min(f32 a, f32 b) {
     }
     return b;
 }
+
+inline f32 max(f32 a, f32 b) {
+    if (a > b) {
+        return a;
+    }
+    return b;
+}

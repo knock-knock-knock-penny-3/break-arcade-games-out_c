@@ -22,13 +22,13 @@ b32 initialized = false;
 
 Powerup powerups[16];
 int next_powerup;
-//f32 invincibility_time;
+v2 powerup_half_size;
+f32 invincibility_time; // in seconds
 //int number_of_triple_shots;
 
 Level current_level;
 #if DEVELOPMENT
 b32 slowmotion = false;
-b32 invincible = false;
 f32 dt_multiplier = 1.f;
 b32 advance_level = false;
 #endif
@@ -63,6 +63,10 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
             block->p.y = y * block->half_size.y * (2.f + spacing * 2.f) - y_offset;
             block->color = make_color_from_grey(y * 255 / num_y);
             block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
+
+            if (y == 0) {
+                block->powerup = POWERUP_INVINCIBILITY;
+            }
         }
     }
 }
@@ -85,15 +89,8 @@ inline void test_for_win_condition() {
 inline void start_game(Level level) {
     advance_level = false;
 
-    SDL_Log("Level request: %d", level);
-    SDL_Log("%d > 0: %d", level, level > 0);
-    SDL_Log("%d == 0: %d", level, level == 0);
-    SDL_Log("%d < 0: %d\n\n", level, level < 0);
     if (level >= L_COUNT) level = 0;
-    else if (level < 0) {
-        SDL_Log("Going to: %d", L_COUNT-1);
-        level = L_COUNT - 1;
-    }
+    else if (level < 0) level = L_COUNT - 1;
 
     current_level = level;
 
@@ -188,8 +185,9 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         initialized = true;
         current_level = 0;
         start_game(current_level);
+
+        powerup_half_size = (v2){2, 2};
     }
-//    SDL_Log("base\tmul\tspeed\n%f\t%f\t%f", ball_base_speed, ball_speed_multiplier, ball_dp.y);
 
     v2 player_desired_p;
     player_desired_p.x = pixels_to_world(game, input->mouse).x;
@@ -294,7 +292,21 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     for (Powerup *powerup = powerups; powerup != powerups + array_count(powerups); powerup++) {
         if (powerup->kind == POWERUP_INACTIVE) continue;
-        draw_rect(game, powerup->p, (v2){2, 2}, 0xFFFFFF00);
+
+        powerup->p.y -= 15 * dt;
+
+        if (is_colliding(player_p, player_half_size, powerup->p, powerup_half_size)) {
+            switch (powerup->kind) {
+                case POWERUP_INVINCIBILITY: {
+                    invincibility_time = 5.f;
+                } break;
+
+                invalid_default_case;
+            }
+            powerup->kind = POWERUP_INACTIVE;
+        }
+
+        draw_rect(game, powerup->p, powerup_half_size, 0xFFFFFF00);
     }
 
     ball_p = ball_desired_p;
@@ -305,14 +317,18 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     draw_rect(game, ball_p, ball_half_size, 0xFF00FFFF);
 
-    if (invincible) draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
+    if (invincibility_time > 0) {
+        invincibility_time -= dt;
+        draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
+    }
     else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
 
     if (ball_p.y - ball_half_size.y < -50) {
         // Bottom border
 #if DEVELOPMENT
         // Invincibility
-        if (invincible) {
+        SDL_Log("%f", invincibility_time);
+        if (invincibility_time > 0) {
             ball_p.y = -arena_half_size.y + ball_half_size.y;
             ball_dp.y *= -1;
         } else {
@@ -327,7 +343,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 #if DEVELOPMENT
     if pressed(BUTTON_LEFT) start_game(current_level - 1);
     if pressed(BUTTON_RIGHT) start_game(current_level + 1);
-    if pressed(BUTTON_UP) invincible = true;
+    if is_down(BUTTON_UP) invincibility_time = max(1.f, invincibility_time + dt);
     if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif

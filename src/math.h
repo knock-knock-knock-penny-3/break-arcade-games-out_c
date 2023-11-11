@@ -29,5 +29,6 @@ u32 make_color_from_grey(u8);
 extern f32 lerp(f32, f32, f32);
 extern f32 absf(f32);
 extern f32 min(f32, f32);
+extern f32 max(f32, f32);
 
 #endif // BREAKOUT_MATH_H_INCLUDED
