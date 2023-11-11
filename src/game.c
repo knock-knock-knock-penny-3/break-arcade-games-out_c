@@ -20,12 +20,31 @@ b32 first_ball_movement = true;
 
 b32 initialized = false;
 Game_Modes current_game_mode;
+Game_Mode_State game_mode_state;
 #if DEVELOPMENT
 b32 slowmotion = false;
 b32 invincible = false;
 f32 dt_multiplier = 1.f;
 b32 advance_game_mode = false;
 #endif
+
+internal void simulate_game_mode(Game *game) {
+    switch (current_game_mode) {
+        case GM_WALL: {
+            for (Powerup *powerup = game_mode_state.powerups; powerup != game_mode_state.powerups + array_count(game_mode_state.powerups); powerup++) {
+                if (powerup->kind == POWERUP_INACTIVE) continue;
+                draw_rect(game, powerup->p, (v2){2, 2}, 0xFFFFFF00);
+            }
+        } break;
+    }
+}
+
+internal void spawn_powerup(v2 p) {
+    Powerup *powerup = game_mode_state.powerups + game_mode_state.next_powerup++;
+    if (game_mode_state.next_powerup >= array_count(game_mode_state.powerups)) game_mode_state.next_powerup = 0;
+    powerup->p = p;
+    powerup->kind = POWERUP_INVINCIBILITY;
+}
 
 void create_block_block(int num_x, int num_y, f32 spacing) {
     f32 block_x_half_size = 4.f;
@@ -50,7 +69,18 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
     }
 }
 
-internal void test_for_win_condition() {
+internal void block_destroyed(Block *block) {
+    test_for_win_condition();
+
+    switch (current_game_mode) {
+        case GM_POWERUPS:
+        case GM_WALL: {
+            spawn_powerup(block->p);
+        } break;
+    }
+}
+
+inline void test_for_win_condition() {
     blocks_destroyed++;
     if (blocks_destroyed == num_blocks) {
         advance_game_mode = true;
@@ -58,13 +88,15 @@ internal void test_for_win_condition() {
 }
 
 inline void start_game(Game_Modes game_mode) {
+    advance_game_mode = false;
+
     if (game_mode >= GM_COUNT) game_mode = 0;
     else if (game_mode < 0) game_mode = GM_COUNT - 1;
 
     current_game_mode = game_mode;
+    game_mode_state = (Game_Mode_State){0};
 
     first_ball_movement = true;
-    advance_game_mode = false;
     ball_base_speed = -50;
     ball_p.x = 0;
     ball_p.y = 40;
@@ -141,33 +173,13 @@ inline void start_game(Game_Modes game_mode) {
         } break;
 
         case GM_SPACED: {
-            int num_x = 10;
-            int num_y = 4;
-            f32 gap = 4.f;
-            f32 x_offset;
-            f32 y_offset;
-
-            for (int y = 0; y < num_y; y++) {
-                for (int x = 0; x < num_x; x++) {
-                    Block *block = blocks + num_blocks++;
-
-                    if (num_blocks >= array_count(blocks)) {
-                        num_blocks = 0;
-                    }
-
-                    block->life = 1;
-                    block->half_size = (v2){4, 2};
-                    x_offset = block->half_size.x * (num_x - 1) * gap * .5f;
-                    y_offset = block->half_size.y * (num_y - 1) * gap * .5f - 15;
-
-                    block->p.x = x * block->half_size.x * gap - x_offset;
-                    block->p.y = y * block->half_size.y * gap - y_offset;
-                    block->color = make_color_from_grey(y * 255 / num_y);
-                    block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
-                }
-            }
+            create_block_block(11, 6, 1.f);
         } break;
-            create_block_block(19, 9, 1.f);
+
+        case GM_POWERUPS: {
+
+        } break;
+
         case GM_PONG: {
 
         } break;
@@ -250,7 +262,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                             ball_dp.y = -ball_base_speed * ball_speed_multiplier;
                         }
                         block->life--;
-                        test_for_win_condition();
+                        block_destroyed(block);
                     }
                 }
             }
@@ -278,7 +290,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                             ball_dp.y = ball_base_speed * ball_speed_multiplier;
                         }
                         block->life--;
-                        test_for_win_condition();
+                        block_destroyed(block);
                     }
                 }
             }
@@ -291,8 +303,12 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     player_dp.x = (player_desired_p.x - player_p.x) / dt;
     player_p = player_desired_p;
 
+    simulate_game_mode(game);
+
     draw_rect(game, ball_p, ball_half_size, 0xFF00FFFF);
-    draw_rect(game, player_p, player_half_size, 0xFF00FF00);
+
+    if (invincible) draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
+    else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
 
     if (ball_p.y - ball_half_size.y < -50) {
         // Bottom border

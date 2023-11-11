@@ -14,11 +14,43 @@ typedef enum {
     GM_WALL,
     GM_CONSTRUCTION,
     GM_SPACED,
-
+    GM_POWERUPS,
     GM_PONG,
 
     GM_COUNT,
 } Game_Modes;
+
+typedef enum {
+    POWERUP_INACTIVE,
+    POWERUP_INVINCIBILITY,
+    POWERUP_TRIPLE_SHOT,
+} Powerup_Kind;
+
+typedef struct {
+    Powerup_Kind kind;
+    v2 p;
+} Powerup;
+
+//typedef struct {
+//    Powerup powerups[16];
+//    int next_power_up;
+//
+//    f32 invincibility_time;
+//    int number_of_triple_shots;
+//} GM_Powerups_State;
+
+typedef struct {
+    union {
+//        GM_Powerups_State;
+        struct {
+            Powerup powerups[16];
+            int next_powerup;
+
+            f32 invincibility_time;
+            int number_of_triple_shots;
+        };
+    };
+} Game_Mode_State;
 
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);
