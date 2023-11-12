@@ -33,6 +33,14 @@ typedef struct {
     Powerup_Kind powerup;
 } Block;
 
+typedef struct {
+    v2 p;
+    v2 dp;
+    v2 half_size;
+    f32 base_speed;
+    f32 speed_multiplier;
+} Ball;
+
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);
 void set_slowmotion(b32);
