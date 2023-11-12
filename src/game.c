@@ -30,6 +30,21 @@ f32 dt_multiplier = 1.f;
 b32 advance_level = false;
 #endif
 
+internal void spawn_powerup(Powerup_Kind kind, v2 p) {
+    Powerup *powerup = powerups + next_powerup++;
+    if (next_powerup >= array_count(powerups)) next_powerup = 0;
+    powerup->p = p;
+    powerup->kind = kind;
+}
+
+internal void block_destroyed(Block *block) {
+    test_for_win_condition();
+
+    if (block->powerup) {
+        spawn_powerup(block->powerup, block->p);
+    }
+}
+
 internal b32 do_ball_block_collision(Ball *ball, Block *block) {
     v2 t;
     f32 diff_y = ball->desired_p.y - ball->p.y;
@@ -93,13 +108,6 @@ internal void simulate_level(Game *game) {
 
 }
 
-internal void spawn_powerup(Powerup_Kind kind, v2 p) {
-    Powerup *powerup = powerups + next_powerup++;
-    if (next_powerup >= array_count(powerups)) next_powerup = 0;
-    powerup->p = p;
-    powerup->kind = kind;
-}
-
 void create_block_block(int num_x, int num_y, f32 spacing) {
     f32 block_x_half_size = 4.f;
     f32 x_offset = (f32)num_x * block_x_half_size * (2.f + (spacing * 2.f)) * .5f - block_x_half_size * (1.f + spacing);
@@ -124,14 +132,6 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
                 block->powerup = POWERUP_INVINCIBILITY;
             }
         }
-    }
-}
-
-inline void block_destroyed(Block *block) {
-    test_for_win_condition();
-
-    if (block->powerup) {
-        spawn_powerup(block->powerup, block->p);
     }
 }
 
