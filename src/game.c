@@ -71,6 +71,7 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
                 }
                 block->life--;
                 block_destroyed(block);
+                return true;
             }
         }
     }
@@ -99,9 +100,12 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
                 }
                 block->life--;
                 block_destroyed(block);
+                return true;
             }
         }
     }
+
+    return false;
 }
 
 internal void simulate_level(Game *game) {
