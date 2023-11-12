@@ -2,6 +2,7 @@
 #include "game.h"
 
 Ball ball;
+Ball powerup_balls[2];
 
 v2 player_p;
 v2 player_dp;
@@ -28,6 +29,65 @@ b32 slowmotion = false;
 f32 dt_multiplier = 1.f;
 b32 advance_level = false;
 #endif
+
+internal b32 do_ball_block_collision(Ball *ball, Block *block) {
+    v2 t;
+    f32 diff_y = ball->desired_p.y - ball->p.y;
+    if (diff_y != 0) {
+        f32 collision_point_y;
+        if (diff_y > 0) {
+            collision_point_y = block->p.y - block->half_size.y - ball->half_size.y;
+        } else {
+            collision_point_y = block->p.y + block->half_size.y + ball->half_size.y;
+        }
+        t.y = (collision_point_y - ball->p.y) / diff_y;
+        if (t.y >= 0.f && t.y <= 1.f) {
+            f32 target_x = lerp(ball->p.x, t.y, ball->desired_p.x);
+            if (target_x + ball->half_size.x > block->p.x - block->half_size.x &&
+                target_x - ball->half_size.x < block->p.x + block->half_size.x) {
+                ball->desired_p.y = lerp(ball->p.y, t.y, ball->desired_p.y);
+                if (block->ball_speed_multiplier > ball->speed_multiplier) {
+                    ball->speed_multiplier = block->ball_speed_multiplier;
+                }
+                if (ball->dp.y > 0) {
+                    ball->dp.y = ball->base_speed * ball->speed_multiplier;
+                } else {
+                    ball->dp.y = -ball->base_speed * ball->speed_multiplier;
+                }
+                block->life--;
+                block_destroyed(block);
+            }
+        }
+    }
+    f32 diff_x = ball->desired_p.x - ball->p.x;
+    if (diff_x != 0) {
+        f32 collision_point_x;
+        if (diff_x > 0) {
+            collision_point_x = block->p.x - block->half_size.x - ball->half_size.x;
+        } else {
+            collision_point_x = block->p.x + block->half_size.x + ball->half_size.x;
+        }
+        t.x = (collision_point_x - ball->p.x) / diff_x;
+        if (t.x >= 0.f && t.x <= 1.f) {
+            f32 target_y = lerp(ball->p.y, t.x, ball->desired_p.y);
+            if (target_y + ball->half_size.y > block->p.y - block->half_size.y &&
+                target_y - ball->half_size.y < block->p.y + block->half_size.y) {
+                ball->desired_p.x = lerp(ball->p.x, t.x, ball->desired_p.x);
+                ball->dp.x *= -1;
+                if (block->ball_speed_multiplier > ball->speed_multiplier) {
+                    ball->speed_multiplier = block->ball_speed_multiplier;
+                }
+                if (ball->dp.y > 0) {
+                    ball->dp.y = -ball->base_speed * ball->speed_multiplier;
+                } else {
+                    ball->dp.y = ball->base_speed * ball->speed_multiplier;
+                }
+                block->life--;
+                block_destroyed(block);
+            }
+        }
+    }
+}
 
 internal void simulate_level(Game *game) {
 
@@ -67,7 +127,7 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
     }
 }
 
-internal void block_destroyed(Block *block) {
+inline void block_destroyed(Block *block) {
     test_for_win_condition();
 
     if (block->powerup) {
@@ -188,33 +248,33 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     v2 player_desired_p;
     player_desired_p.x = pixels_to_world(game, input->mouse).x;
     player_desired_p.y = player_p.y;
-    v2 ball_desired_p = add_v2(ball.p, mul_v2(ball.dp, dt));
+    ball.desired_p = add_v2(ball.p, mul_v2(ball.dp, dt));
 #if DEVELOPMENT
     if (slowmotion) {
-        ball_desired_p = add_v2(ball.p, mul_v2(div_v2(ball.dp, 10), dt));
+        ball.desired_p = add_v2(ball.p, mul_v2(div_v2(ball.dp, 10), dt));
     }
 #endif
 
-    if (ball.dp.y < 0 && is_colliding(player_p, player_half_size, ball_desired_p, ball.half_size)) {
+    if (ball.dp.y < 0 && is_colliding(player_p, player_half_size, ball.desired_p, ball.half_size)) {
         // player collision with ball
-        ball_desired_p.y = player_p.y + player_half_size.y;
+        ball.desired_p.y = player_p.y + player_half_size.y;
         ball.dp.x = (ball.p.x - player_p.x) * 7.5f;
         ball.dp.x += clamp(-25, player_dp.x * .5f, 25);
         ball.dp.y *= -1;
         first_ball_movement = false;
-    } else if (ball_desired_p.x + ball.half_size.x > arena_half_size.x) {
+    } else if (ball.desired_p.x + ball.half_size.x > arena_half_size.x) {
         // Left border
-        ball_desired_p.x = arena_half_size.x - ball.half_size.x;
+        ball.desired_p.x = arena_half_size.x - ball.half_size.x;
         ball.dp.x *= -1;
-    } else if (ball_desired_p.x - ball.half_size.x < -arena_half_size.x) {
+    } else if (ball.desired_p.x - ball.half_size.x < -arena_half_size.x) {
         // Right border
-        ball_desired_p.x = -arena_half_size.x + ball.half_size.x;
+        ball.desired_p.x = -arena_half_size.x + ball.half_size.x;
         ball.dp.x *= -1;
     }
 
-    if (ball_desired_p.y + ball.half_size.y > arena_half_size.y) {
+    if (ball.desired_p.y + ball.half_size.y > arena_half_size.y) {
         // Top border
-        ball_desired_p.y = arena_half_size.y - ball.half_size.y;
+        ball.desired_p.y = arena_half_size.y - ball.half_size.y;
         ball.dp.y *= -1;
     }
 
@@ -224,63 +284,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         if (!block->life) continue;
 
         if (!first_ball_movement) {
-            // This is the ball/block collision
-            v2 t;
-            f32 diff_y = ball_desired_p.y - ball.p.y;
-            if (diff_y != 0) {
-                f32 collision_point_y;
-                if (diff_y > 0) {
-                    collision_point_y = block->p.y - block->half_size.y - ball.half_size.y;
-                } else {
-                    collision_point_y = block->p.y + block->half_size.y + ball.half_size.y;
-                }
-                t.y = (collision_point_y - ball.p.y) / diff_y;
-                if (t.y >= 0.f && t.y <= 1.f) {
-                    f32 target_x = lerp(ball.p.x, t.y, ball_desired_p.x);
-                    if (target_x + ball.half_size.x > block->p.x - block->half_size.x &&
-                        target_x - ball.half_size.x < block->p.x + block->half_size.x) {
-                        ball_desired_p.y = lerp(ball.p.y, t.y, ball_desired_p.y);
-                        if (block->ball_speed_multiplier > ball.speed_multiplier) {
-                            ball.speed_multiplier = block->ball_speed_multiplier;
-                        }
-                        if (ball.dp.y > 0) {
-                            ball.dp.y = ball.base_speed * ball.speed_multiplier;
-                        } else {
-                            ball.dp.y = -ball.base_speed * ball.speed_multiplier;
-                        }
-                        block->life--;
-                        block_destroyed(block);
-                    }
-                }
-            }
-            f32 diff_x = ball_desired_p.x - ball.p.x;
-            if (diff_x != 0) {
-                f32 collision_point_x;
-                if (diff_x > 0) {
-                    collision_point_x = block->p.x - block->half_size.x - ball.half_size.x;
-                } else {
-                    collision_point_x = block->p.x + block->half_size.x + ball.half_size.x;
-                }
-                t.x = (collision_point_x - ball.p.x) / diff_x;
-                if (t.x >= 0.f && t.x <= 1.f) {
-                    f32 target_y = lerp(ball.p.y, t.x, ball_desired_p.y);
-                    if (target_y + ball.half_size.y > block->p.y - block->half_size.y &&
-                        target_y - ball.half_size.y < block->p.y + block->half_size.y) {
-                        ball_desired_p.x = lerp(ball.p.x, t.x, ball_desired_p.x);
-                        ball.dp.x *= -1;
-                        if (block->ball_speed_multiplier > ball.speed_multiplier) {
-                            ball.speed_multiplier = block->ball_speed_multiplier;
-                        }
-                        if (ball.dp.y > 0) {
-                            ball.dp.y = -ball.base_speed * ball.speed_multiplier;
-                        } else {
-                            ball.dp.y = ball.base_speed * ball.speed_multiplier;
-                        }
-                        block->life--;
-                        block_destroyed(block);
-                    }
-                }
-            }
+            do_ball_block_collision(&ball, block);
         }
 
         draw_rect(game, block->p, block->half_size, block->color);
@@ -305,7 +309,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         draw_rect(game, powerup->p, powerup_half_size, 0xFFFFFF00);
     }
 
-    ball.p = ball_desired_p;
+    ball.p = ball.desired_p;
     player_dp.x = (player_desired_p.x - player_p.x) / dt;
     player_p = player_desired_p;
 

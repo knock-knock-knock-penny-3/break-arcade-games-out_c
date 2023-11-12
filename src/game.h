@@ -39,6 +39,7 @@ typedef struct {
     v2 half_size;
     f32 base_speed;
     f32 speed_multiplier;
+    v2 desired_p;
 } Ball;
 
 // PROTOTYPES
