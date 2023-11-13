@@ -14,7 +14,8 @@ enum {
 };
 
 typedef struct {
-    v2i mouse;
+    v2i mouse_p;
+    v2i mouse_dp;
     Button buttons[BUTTON_COUNT];
 } Input;
 

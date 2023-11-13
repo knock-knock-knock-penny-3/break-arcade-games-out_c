@@ -30,14 +30,15 @@ int main() {
     SDL_RenderSetLogicalSize(game.renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
     SDL_SetRenderDrawBlendMode(game.renderer,SDL_BLENDMODE_BLEND);
 
-    SDL_ShowCursor(SDL_DISABLE);
-
     game.width = SCREEN_WIDTH;
     game.height = SCREEN_HEIGHT;
 
     Input input = {0};
     u32 last_counter = SDL_GetPerformanceCounter();
     f64 last_dt = 0.01666f;  // 60 FPS
+
+//    SDL_ShowCursor(SDL_DISABLE);
+    SDL_GetMouseState(&input.mouse_p.x,&input.mouse_p.y);
 
     while (running) {
         // Input
@@ -91,8 +92,13 @@ input.buttons[b].is_down = state[vk];
         set_slowmotion(state[SDL_SCANCODE_SPACE]);
 #endif
 
-        SDL_GetMouseState(&input.mouse.x,&input.mouse.y);
-        input.mouse.y = game.height - input.mouse.y;
+        v2i mouse_pointer;
+        SDL_GetMouseState(&mouse_pointer.x,&mouse_pointer.y);
+        mouse_pointer.y = game.height - mouse_pointer.y;
+
+        input.mouse_dp = sub_v2i(mouse_pointer, input.mouse_p);
+
+        input.mouse_p = mouse_pointer;
 
         // Simulation
         simulate_game(&game, &input, last_dt);

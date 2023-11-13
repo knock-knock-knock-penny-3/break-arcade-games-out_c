@@ -41,6 +41,22 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
     SDL_RenderFillRect(game->renderer, &rect);
 }
 
+v2 pixels_dp_to_world(Game *game, v2i pixels_coord) {
+    f32 aspect_multiplier = calculate_aspect_multiplier(game);
+
+    v2 result;
+    result.x = (f32)pixels_coord.x;
+    result.y = (f32)pixels_coord.y;
+
+    result.x /= aspect_multiplier;
+    result.x /= scale;
+
+    result.y /= aspect_multiplier;
+    result.y /= scale;
+
+    return result;
+}
+
 v2 pixels_to_world(Game *game, v2i pixels_coord) {
     f32 aspect_multiplier = calculate_aspect_multiplier(game);
 

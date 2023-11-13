@@ -291,8 +291,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     }
 
     v2 player_desired_p;
-    if (inverted_controls_t <= 0) player_desired_p.x = pixels_to_world(game, input->mouse).x;
-    else player_desired_p.x = -pixels_to_world(game, input->mouse).x;
+    if (inverted_controls_t <= 0) player_desired_p.x = pixels_to_world(game, input->mouse_p).x;
+    else player_desired_p.x = -pixels_to_world(game, input->mouse_p).x;
     player_desired_p.y = player_p.y;
 
     // Update balls
