@@ -22,6 +22,7 @@ Powerup powerups[16];
 int next_powerup;
 v2 powerup_half_size;
 f32 invincibility_time; // in seconds
+f32 comet_time; // in seconds
 int number_of_triple_shots;
 
 Level current_level;
@@ -94,10 +95,12 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
 
                 if (ball->dp.y > 0) {
-                    if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) {
-                        ball->flags &= ~BALL_ACTIVE;
+                    if (comet_time <= 0) {
+                        if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) {
+                            ball->flags &= ~BALL_ACTIVE;
+                        }
+                        ball->dp.y = -ball->base_speed * ball->speed_multiplier;
                     }
-                    ball->dp.y = -ball->base_speed * ball->speed_multiplier;
                 }
                 else ball->dp.y = ball->base_speed * ball->speed_multiplier;
 
@@ -118,9 +121,9 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
             if (target.y + ball->half_size.y > block->p.y - block->half_size.y &&
                 target.y - ball->half_size.y < block->p.y + block->half_size.y) {
                 ball->desired_p.x = lerp(ball->p.x, t.x, ball->desired_p.x);
-                ball->dp.x *= -1;
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
 
+                ball->dp.x *= -1;
                 if (ball->dp.y > 0) ball->dp.y = -ball->base_speed * ball->speed_multiplier;
                 else ball->dp.y = ball->base_speed * ball->speed_multiplier;
 
@@ -159,7 +162,7 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
             block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
 
             if (y == 0) {
-                block->powerup = POWERUP_TRIPLE_SHOT;
+                block->powerup = POWERUP_COMET;
             }
         }
     }
@@ -197,6 +200,10 @@ inline void start_game(Level level) {
     player_half_size = (v2){10, 2};
 
     arena_half_size = (v2){85, 45};
+
+    invincibility_time = 0.f;
+    comet_time = 0.f;
+    number_of_triple_shots = 0;
 
     num_blocks = 0;
     blocks_destroyed = 0;
@@ -358,6 +365,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                     invincibility_time = 5.f;
                 } break;
 
+                case POWERUP_COMET: {
+                    comet_time = 5.f;
+                } break;
+
                 case POWERUP_TRIPLE_SHOT: {
                     number_of_triple_shots++;
                 } break;
@@ -389,6 +400,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
         else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
     }
+
+    if (comet_time > 0) comet_time -= dt;
 
     if (advance_level) start_game(current_level + 1);
 

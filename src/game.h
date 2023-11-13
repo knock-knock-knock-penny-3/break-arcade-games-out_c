@@ -21,6 +21,7 @@ typedef enum {
     POWERUP_INACTIVE,
     POWERUP_INVINCIBILITY,
     POWERUP_TRIPLE_SHOT,
+    POWERUP_COMET,
 } Powerup_Kind;
 
 typedef struct {
