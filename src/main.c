@@ -30,6 +30,8 @@ int main() {
     SDL_RenderSetLogicalSize(game.renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
     SDL_SetRenderDrawBlendMode(game.renderer,SDL_BLENDMODE_BLEND);
 
+    SDL_ShowCursor(SDL_DISABLE);
+
     game.width = SCREEN_WIDTH;
     game.height = SCREEN_HEIGHT;
 
