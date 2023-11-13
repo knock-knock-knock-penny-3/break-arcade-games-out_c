@@ -1,7 +1,8 @@
 #include "main.h"
 #include "game.h"
 
-Ball ball;
+Ball balls[3];
+int next_ball;
 Ball powerup_balls[2];
 
 v2 player_p;
@@ -21,7 +22,7 @@ Powerup powerups[16];
 int next_powerup;
 v2 powerup_half_size;
 f32 invincibility_time; // in seconds
-//int number_of_triple_shots;
+int number_of_triple_shots;
 
 Level current_level;
 #if DEVELOPMENT
@@ -133,7 +134,7 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
             block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
 
             if (y == 0) {
-                block->powerup = POWERUP_INVINCIBILITY;
+                block->powerup = POWERUP_TRIPLE_SHOT;
             }
         }
     }
@@ -154,14 +155,17 @@ inline void start_game(Level level) {
 
     current_level = level;
 
+    zero_array(balls);
+
     first_ball_movement = true;
-    ball.base_speed = -50;
-    ball.p.x = 0;
-    ball.p.y = 40;
-    ball.dp.x = 0;
-    ball.dp.y = ball.base_speed;
-    ball.half_size = (v2){.75, .75};
-    ball.speed_multiplier = 1.f;
+    balls[0].base_speed = -50;
+    balls[0].p.x = 0;
+    balls[0].p.y = 40;
+    balls[0].dp.x = 0;
+    balls[0].dp.y = balls[0].base_speed;
+    balls[0].half_size = (v2){.75, .75};
+    balls[0].speed_multiplier = 1.f;
+    balls[0].flags |= BALL_ACTIVE;
 
     player_p.y = -40;
     player_half_size = (v2){10, 2};
@@ -252,34 +256,52 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     v2 player_desired_p;
     player_desired_p.x = pixels_to_world(game, input->mouse).x;
     player_desired_p.y = player_p.y;
-    ball.desired_p = add_v2(ball.p, mul_v2(ball.dp, dt));
-#if DEVELOPMENT
-    if (slowmotion) {
-        ball.desired_p = add_v2(ball.p, mul_v2(div_v2(ball.dp, 10), dt));
-    }
-#endif
 
-    if (ball.dp.y < 0 && is_colliding(player_p, player_half_size, ball.desired_p, ball.half_size)) {
-        // player collision with ball
-        ball.desired_p.y = player_p.y + player_half_size.y;
-        ball.dp.x = (ball.p.x - player_p.x) * 7.5f;
-        ball.dp.x += clamp(-25, player_dp.x * .5f, 25);
-        ball.dp.y *= -1;
-        first_ball_movement = false;
-    } else if (ball.desired_p.x + ball.half_size.x > arena_half_size.x) {
-        // Left border
-        ball.desired_p.x = arena_half_size.x - ball.half_size.x;
-        ball.dp.x *= -1;
-    } else if (ball.desired_p.x - ball.half_size.x < -arena_half_size.x) {
-        // Right border
-        ball.desired_p.x = -arena_half_size.x + ball.half_size.x;
-        ball.dp.x *= -1;
-    }
+    // Update balls
+    for (Ball *ball = balls; ball != balls + array_count(balls); ball++) {
+        b32 comp = ball->flags & BALL_ACTIVE;
+        if (!comp) continue;
+        ball->desired_p = add_v2(ball->p, mul_v2(ball->dp, dt));
 
-    if (ball.desired_p.y + ball.half_size.y > arena_half_size.y) {
-        // Top border
-        ball.desired_p.y = arena_half_size.y - ball.half_size.y;
-        ball.dp.y *= -1;
+    #if DEVELOPMENT
+        if (slowmotion) {
+            ball->desired_p = add_v2(ball->p, mul_v2(div_v2(ball->dp, 10), dt));
+        }
+    #endif
+
+        if (ball->dp.y < 0 && is_colliding(player_p, player_half_size, ball->desired_p, ball->half_size)) {
+            // player collision with ball
+            ball->desired_p.y = player_p.y + player_half_size.y;
+            ball->dp.x = (ball->p.x - player_p.x) * 7.5f;
+            ball->dp.x += clamp(-25, player_dp.x * .5f, 25);
+            ball->dp.y *= -1;
+            first_ball_movement = false;
+
+            if (number_of_triple_shots) {
+                number_of_triple_shots--;
+                spawn_triple_shot_balls();
+            }
+        } else if (ball->desired_p.x + ball->half_size.x > arena_half_size.x) {
+            // Left border
+            ball->desired_p.x = arena_half_size.x - ball->half_size.x;
+            ball->dp.x *= -1;
+        } else if (ball->desired_p.x - ball->half_size.x < -arena_half_size.x) {
+            // Right border
+            ball->desired_p.x = -arena_half_size.x + ball->half_size.x;
+            ball->dp.x *= -1;
+        }
+
+        if (ball->desired_p.y + ball->half_size.y > arena_half_size.y) {
+            // Top border
+            ball->desired_p.y = arena_half_size.y - ball->half_size.y;
+            ball->dp.y *= -1;
+        }
+
+        if (ball->desired_p.y - ball->half_size.y < -50) {
+            // Bottom border
+            if (invincibility_time <= 0) start_game(current_level); // LOST
+            else ball->dp.y *= -1.f;                                 // INVINCIBILITY
+        }
     }
 
     clear_screen_and_draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100, 0xFF220500);
@@ -288,7 +310,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         if (!block->life) continue;
 
         if (!first_ball_movement) {
-            do_ball_block_collision(&ball, block);
+            do_ball_block_collision(balls, block);
         }
 
         draw_rect(game, block->p, block->half_size, block->color);
@@ -305,6 +327,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                     invincibility_time = 5.f;
                 } break;
 
+                case POWERUP_TRIPLE_SHOT: {
+                    number_of_triple_shots++;
+                } break;
+
                 invalid_default_case;
             }
             powerup->kind = POWERUP_INACTIVE;
@@ -313,36 +339,28 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         draw_rect(game, powerup->p, powerup_half_size, 0xFFFFFF00);
     }
 
-    ball.p = ball.desired_p;
-    player_dp.x = (player_desired_p.x - player_p.x) / dt;
-    player_p = player_desired_p;
-
-    simulate_level(game);
-
-    draw_rect(game, ball.p, ball.half_size, 0xFF00FFFF);
-
-    if (invincibility_time > 0) {
-        invincibility_time -= dt;
-        draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
+    // Render balls
+    for (Ball *ball = balls; ball != balls + array_count(balls); ball++) {
+        b32 comp = ball->flags & BALL_ACTIVE;
+        if (!comp) continue;
+        ball->p = ball->desired_p;
+        draw_rect(game, ball->p, ball->half_size, 0xFF00FFFF);
     }
-    else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
 
-    if (ball.p.y - ball.half_size.y < -50) {
-        // Bottom border
-#if DEVELOPMENT
-        // Invincibility
-        SDL_Log("%f", invincibility_time);
+    {
+        player_dp.x = (player_desired_p.x - player_p.x) / dt;
+        player_p = player_desired_p;
+
+        simulate_level(game);
+
         if (invincibility_time > 0) {
-            ball.p.y = -arena_half_size.y + ball.half_size.y;
-            ball.dp.y *= -1;
-        } else {
-#endif
-            current_level = 0;
-            start_game(current_level);
-#if DEVELOPMENT
+            invincibility_time -= dt;
+            draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
         }
-#endif
+        else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
     }
+
+    if (advance_level) start_game(current_level + 1);
 
 #if DEVELOPMENT
     if pressed(BUTTON_LEFT) start_game(current_level - 1);
@@ -351,8 +369,6 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
-
-    if (advance_level) start_game(current_level + 1);
 }
 
 void set_slowmotion(b32 sl) {

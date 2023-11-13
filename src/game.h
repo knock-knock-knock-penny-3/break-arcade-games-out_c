@@ -1,6 +1,9 @@
 #ifndef BREAKOUT_GAME_H_INCLUDED
 #define BREAKOUT_GAME_H_INCLUDED
 
+#define BALL_ACTIVE                 0x1;
+#define BALL_DESTROYED_ON_DP_Y_DOWN 0x2;
+
 typedef enum {
     L01_NORMAL,
     L02_WALL,
@@ -34,17 +37,22 @@ typedef struct {
 } Block;
 
 typedef struct {
+    u32 flags;
+
     v2 p;
     v2 dp;
     v2 half_size;
+
+    v2 desired_p;
+
     f32 base_speed;
     f32 speed_multiplier;
-    v2 desired_p;
 } Ball;
 
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);
 void set_slowmotion(b32);
 extern void start_game(Level);
+extern void test_for_win_condition();
 
 #endif // BREAKOUT_GAME_H_INCLUDED

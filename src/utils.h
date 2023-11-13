@@ -47,4 +47,12 @@ typedef struct {
 
 #define invalid_default_case default: {assert(0)}
 
+internal void zero_size(void* mem, u64 size) {
+    u8* dest = (u8*)mem;
+    for (u64 i = 0; i < size; i++) {
+        *dest++ = 0;
+    }
+}
+#define zero_array(a) zero_size(a, sizeof(a))
+
 #endif // BREAKOUT_UTILS_H_INCLUDED
