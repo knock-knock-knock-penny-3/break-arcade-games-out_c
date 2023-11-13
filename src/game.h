@@ -3,6 +3,8 @@
 
 #define BALL_ACTIVE                 0x1
 #define BALL_DESTROYED_ON_DP_Y_DOWN 0x2
+#define BALL_RIVAL_A                0x4
+#define BALL_RIVAL_B                0x8
 
 #define for_each_ball for (Ball *ball = balls; ball != balls + array_count(balls); ball++)
 
