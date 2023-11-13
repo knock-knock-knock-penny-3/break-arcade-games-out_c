@@ -28,7 +28,7 @@ typedef enum {
     // Powerdowns
     POWER_INSTAKILL,
     POWER_STRONG_BLOCKS,
-    POWER_REVERSE_CONTROLS,
+    POWER_INVERTED_CONTROLS,
     POWER_SLOW_PLAYER,
 } Power_Block_Kind;
 

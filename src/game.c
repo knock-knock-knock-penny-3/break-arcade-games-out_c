@@ -24,6 +24,7 @@ f32 invincibility_t; // in seconds
 f32 comet_t; // in seconds
 int number_of_triple_shots;
 f32 strong_blocks_t; // in seconds
+f32 inverted_controls_t; // in seconds
 
 Level current_level;
 #if DEVELOPMENT
@@ -141,10 +142,6 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
     return false;
 }
 
-internal void simulate_level(Game *game) {
-
-}
-
 void create_block_block(int num_x, int num_y, f32 spacing) {
     f32 block_x_half_size = 4.f;
     f32 x_offset = (f32)num_x * block_x_half_size * (2.f + (spacing * 2.f)) * .5f - block_x_half_size * (1.f + spacing);
@@ -166,7 +163,7 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
             block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
 
             if (y == 0) {
-                block->power_block = POWER_STRONG_BLOCKS;
+                block->power_block = POWER_INVERTED_CONTROLS;
             }
         }
     }
@@ -210,6 +207,7 @@ inline void start_game(Level level) {
     comet_t = 0.f;
     number_of_triple_shots = 0;
     strong_blocks_t = 0.f;
+    inverted_controls_t = 0.f;
 
     num_blocks = 0;
     blocks_destroyed = 0;
@@ -293,7 +291,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     }
 
     v2 player_desired_p;
-    player_desired_p.x = pixels_to_world(game, input->mouse).x;
+    if (inverted_controls_t <= 0) player_desired_p.x = pixels_to_world(game, input->mouse).x;
+    else player_desired_p.x = -pixels_to_world(game, input->mouse).x;
     player_desired_p.y = player_p.y;
 
     // Update balls
@@ -387,6 +386,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                     strong_blocks_t += 5.f;
                 } break;
 
+                case POWER_INVERTED_CONTROLS: {
+                    inverted_controls_t+= 5.f;
+                } break;
+
                 invalid_default_case;
             }
             power_block->kind = POWER_INACTIVE;
@@ -406,8 +409,6 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         player_dp.x = (player_desired_p.x - player_p.x) / dt;
         player_p = player_desired_p;
 
-        simulate_level(game);
-
         if (invincibility_t > 0) {
             invincibility_t -= dt;
             draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
@@ -417,6 +418,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     if (comet_t > 0) comet_t -= dt;
     if (strong_blocks_t > 0) strong_blocks_t -= dt;
+    if (inverted_controls_t > 0) inverted_controls_t += dt;
 
     if (advance_level) start_game(current_level + 1);
 
