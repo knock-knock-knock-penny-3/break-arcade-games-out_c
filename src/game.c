@@ -20,9 +20,10 @@ b32 initialized = false;
 Power_Block power_blocks[16];
 int next_power_block;
 v2 power_block_half_size;
-f32 invincibility_time; // in seconds
-f32 comet_time; // in seconds
+f32 invincibility_t; // in seconds
+f32 comet_t; // in seconds
 int number_of_triple_shots;
+f32 strong_blocks_t; // in seconds
 
 Level current_level;
 #if DEVELOPMENT
@@ -94,7 +95,7 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
 
                 if (ball->dp.y > 0) {
-                    if (comet_time <= 0) {
+                    if (comet_t <= 0) {
                         if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) {
                             ball->flags &= ~BALL_ACTIVE;
                         }
@@ -103,8 +104,10 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
                 }
                 else ball->dp.y = ball->base_speed * ball->speed_multiplier;
 
-                block->life--;
-                block_destroyed(block);
+                if (strong_blocks_t <= 0) {
+                    block->life--;
+                    if (!block->life) block_destroyed(block);
+                }
                 return true;
             }
         }
@@ -126,8 +129,10 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
                 if (ball->dp.y > 0) ball->dp.y = -ball->base_speed * ball->speed_multiplier;
                 else ball->dp.y = ball->base_speed * ball->speed_multiplier;
 
-                block->life--;
-                block_destroyed(block);
+                if (strong_blocks_t <= 0) {
+                    block->life--;
+                    if (!block->life) block_destroyed(block);
+                }
                 return true;
             }
         }
@@ -161,7 +166,7 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
             block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
 
             if (y == 0) {
-                block->power_block = POWER_INSTAKILL;
+                block->power_block = POWER_STRONG_BLOCKS;
             }
         }
     }
@@ -201,9 +206,10 @@ inline void start_game(Level level) {
 
     arena_half_size = (v2){85, 45};
 
-    invincibility_time = 0.f;
-    comet_time = 0.f;
+    invincibility_t = 0.f;
+    comet_t = 0.f;
     number_of_triple_shots = 0;
+    strong_blocks_t = 0.f;
 
     num_blocks = 0;
     blocks_destroyed = 0;
@@ -334,7 +340,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         if (ball->desired_p.y - ball->half_size.y < -50) {
             // Ball falling down
-            if (invincibility_time <= 0) start_game(current_level); // LOST
+            if (invincibility_t <= 0) start_game(current_level); // LOST
             else ball->dp.y *= -1.f;                                 // INVINCIBILITY
         }
     }
@@ -362,11 +368,11 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         if (is_colliding(player_p, player_half_size, power_block->p, power_block_half_size)) {
             switch (power_block->kind) {
                 case POWER_INVINCIBILITY: {
-                    invincibility_time = 5.f;
+                    invincibility_t += 5.f;
                 } break;
 
                 case POWER_COMET: {
-                    comet_time = 5.f;
+                    comet_t += 5.f;
                 } break;
 
                 case POWER_TRIPLE_SHOT: {
@@ -375,6 +381,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
                 case POWER_INSTAKILL: {
                     start_game(current_level);
+                } break;
+
+                case POWER_STRONG_BLOCKS: {
+                    strong_blocks_t += 5.f;
                 } break;
 
                 invalid_default_case;
@@ -398,21 +408,22 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         simulate_level(game);
 
-        if (invincibility_time > 0) {
-            invincibility_time -= dt;
+        if (invincibility_t > 0) {
+            invincibility_t -= dt;
             draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
         }
         else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
     }
 
-    if (comet_time > 0) comet_time -= dt;
+    if (comet_t > 0) comet_t -= dt;
+    if (strong_blocks_t > 0) strong_blocks_t -= dt;
 
     if (advance_level) start_game(current_level + 1);
 
 #if DEVELOPMENT
     if pressed(BUTTON_LEFT) start_game(current_level - 1);
     if pressed(BUTTON_RIGHT) start_game(current_level + 1);
-    if is_down(BUTTON_UP) invincibility_time = max(1.f, invincibility_time + dt);
+    if is_down(BUTTON_UP) invincibility_t = max(1.f, invincibility_t + dt);
     if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
