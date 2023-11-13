@@ -18,16 +18,24 @@ typedef enum {
 } Level;
 
 typedef enum {
-    POWERUP_INACTIVE,
-    POWERUP_INVINCIBILITY,
-    POWERUP_TRIPLE_SHOT,
-    POWERUP_COMET,
-} Powerup_Kind;
+    POWER_INACTIVE,
+
+    // Powerups
+    POWER_INVINCIBILITY,
+    POWER_TRIPLE_SHOT,
+    POWER_COMET,
+
+    // Powerdowns
+    POWER_INSTAKILL,
+    POWER_STRONG_BLOCKS,
+    POWER_REVERSE_CONTROLS,
+    POWER_SLOW_PLAYER,
+} Power_Block_Kind;
 
 typedef struct {
-    Powerup_Kind kind;
+    Power_Block_Kind kind;
     v2 p;
-} Powerup;
+} Power_Block;
 
 typedef struct {
     v2 p;
@@ -36,7 +44,7 @@ typedef struct {
     int life;
     u32 color;
 
-    Powerup_Kind powerup;
+    Power_Block_Kind power_block;
 } Block;
 
 typedef struct {

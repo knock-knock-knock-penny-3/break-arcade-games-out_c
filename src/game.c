@@ -3,7 +3,6 @@
 
 Ball balls[16];
 int next_ball;
-Ball powerup_balls[2];
 
 v2 player_p;
 v2 player_dp;
@@ -18,9 +17,9 @@ b32 first_ball_movement = true;
 
 b32 initialized = false;
 
-Powerup powerups[16];
-int next_powerup;
-v2 powerup_half_size;
+Power_Block power_blocks[16];
+int next_power_block;
+v2 power_block_half_size;
 f32 invincibility_time; // in seconds
 f32 comet_time; // in seconds
 int number_of_triple_shots;
@@ -63,18 +62,18 @@ internal void spawn_triple_shot_balls() {
 
 }
 
-internal void spawn_powerup(Powerup_Kind kind, v2 p) {
-    Powerup *powerup = powerups + next_powerup++;
-    if (next_powerup >= array_count(powerups)) next_powerup = 0;
-    powerup->p = p;
-    powerup->kind = kind;
+internal void spawn_power_block(Power_Block_Kind kind, v2 p) {
+    Power_Block *power_block = power_blocks + next_power_block++;
+    if (next_power_block >= array_count(power_blocks)) next_power_block = 0;
+    power_block->p = p;
+    power_block->kind = kind;
 }
 
 internal void block_destroyed(Block *block) {
     test_for_win_condition();
 
-    if (block->powerup) {
-        spawn_powerup(block->powerup, block->p);
+    if (block->power_block) {
+        spawn_power_block(block->power_block, block->p);
     }
 }
 
@@ -162,7 +161,7 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
             block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
 
             if (y == 0) {
-                block->powerup = POWERUP_COMET;
+                block->power_block = POWER_INSTAKILL;
             }
         }
     }
@@ -184,7 +183,7 @@ inline void start_game(Level level) {
     current_level = level;
 
     zero_array(balls);
-    zero_array(powerups);
+    zero_array(power_blocks);
 
     first_ball_movement = true;
     balls[0].base_speed = 50;
@@ -195,6 +194,7 @@ inline void start_game(Level level) {
     balls[0].half_size = (v2){.75, .75};
     balls[0].speed_multiplier = 1.f;
     balls[0].flags |= BALL_ACTIVE;
+    balls[0].desired_p = balls[0].p; //@Hack
 
     player_p.y = -40;
     player_half_size = (v2){10, 2};
@@ -283,7 +283,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         current_level = 0;
         start_game(current_level);
 
-        powerup_half_size = (v2){2, 2};
+        power_block_half_size = (v2){2, 2};
     }
 
     v2 player_desired_p;
@@ -354,31 +354,35 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         draw_rect(game, block->p, block->half_size, block->color);
     }
 
-    for (Powerup *powerup = powerups; powerup != powerups + array_count(powerups); powerup++) {
-        if (powerup->kind == POWERUP_INACTIVE) continue;
+    for (Power_Block *power_block = power_blocks; power_block != power_blocks + array_count(power_blocks); power_block++) {
+        if (power_block->kind == POWER_INACTIVE) continue;
 
-        powerup->p.y -= 15 * dt;
+        power_block->p.y -= 15 * dt;
 
-        if (is_colliding(player_p, player_half_size, powerup->p, powerup_half_size)) {
-            switch (powerup->kind) {
-                case POWERUP_INVINCIBILITY: {
+        if (is_colliding(player_p, player_half_size, power_block->p, power_block_half_size)) {
+            switch (power_block->kind) {
+                case POWER_INVINCIBILITY: {
                     invincibility_time = 5.f;
                 } break;
 
-                case POWERUP_COMET: {
+                case POWER_COMET: {
                     comet_time = 5.f;
                 } break;
 
-                case POWERUP_TRIPLE_SHOT: {
+                case POWER_TRIPLE_SHOT: {
                     number_of_triple_shots++;
+                } break;
+
+                case POWER_INSTAKILL: {
+                    start_game(current_level);
                 } break;
 
                 invalid_default_case;
             }
-            powerup->kind = POWERUP_INACTIVE;
+            power_block->kind = POWER_INACTIVE;
         }
 
-        draw_rect(game, powerup->p, powerup_half_size, 0xFFFFFF00);
+        draw_rect(game, power_block->p, power_block_half_size, 0xFFFFFF00);
     }
 
     // Render balls
