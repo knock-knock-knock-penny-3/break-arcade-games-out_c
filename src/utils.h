@@ -45,7 +45,8 @@ typedef struct {
 #define assert(c)
 #endif
 
-#define invalid_default_case default: {assert(0)}
+#define invalid_default_case default: {assert(0);}
+#define invalid_code_path assert(0);
 
 internal void zero_size(void* mem, u64 size) {
     u8* dest = (u8*)mem;
@@ -54,5 +55,6 @@ internal void zero_size(void* mem, u64 size) {
     }
 }
 #define zero_array(a) zero_size(a, sizeof(a))
+#define zero_struct(s) zero_size(&(s), sizeof(s))
 
 #endif // BREAKOUT_UTILS_H_INCLUDED

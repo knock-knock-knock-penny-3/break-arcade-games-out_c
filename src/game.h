@@ -1,8 +1,10 @@
 #ifndef BREAKOUT_GAME_H_INCLUDED
 #define BREAKOUT_GAME_H_INCLUDED
 
-#define BALL_ACTIVE                 0x1;
-#define BALL_DESTROYED_ON_DP_Y_DOWN 0x2;
+#define BALL_ACTIVE                 0x1
+#define BALL_DESTROYED_ON_DP_Y_DOWN 0x2
+
+#define for_each_ball for (Ball *ball = balls; ball != balls + array_count(balls); ball++)
 
 typedef enum {
     L01_NORMAL,
