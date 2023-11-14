@@ -8,7 +8,7 @@ v2 player_p;
 v2 player_dp;
 v2 player_half_size;
 
-Block blocks[256];
+Block blocks[1024];
 int num_blocks;
 int blocks_destroyed;
 
@@ -202,7 +202,8 @@ internal void create_invader(v2 p) {
         "   00 00 "
     };
 
-    f32 block_half_size = 2.f;
+    f32 block_half_size = .8f;
+    p.x -= block_half_size * 11;
     f32 original_x = p.x;
 
     for (int i = 0; i < array_count(invader); i++) {
@@ -214,7 +215,7 @@ internal void create_invader(v2 p) {
                 block->half_size = (v2){block_half_size, block_half_size};
                 block->relative_p = p;
                 block->color = make_color_from_grey(255);
-                block->ball_speed_multiplier = 1 + (f32)(array_count(invader) - i) * 1.25f / array_count(invader);
+                block->ball_speed_multiplier = 1 + (f32)(array_count(invader) - i) * .75f / array_count(invader);
             }
 
             p.x += block_half_size * 2.f;
@@ -435,7 +436,14 @@ inline void start_game(Level level) {
         } break;
 
         case L06_INVADERS: {
-            create_invader((v2){0, 0});
+            for (int i = 0; i < 3; i++) {
+                f32 y = i * 20.f;
+                create_invader((v2){-50, y});
+                create_invader((v2){-25, y});
+                create_invader((v2){0, y});
+                create_invader((v2){25, y});
+                create_invader((v2){50, y});
+            }
         } break;
 
         invalid_default_case;
