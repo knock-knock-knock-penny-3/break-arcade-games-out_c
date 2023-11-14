@@ -291,6 +291,16 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
             pong->enemy_dp = desired_dp;
             pong->enemy_p = desired_p;
         } break;
+
+        case L06_INVADERS: {
+            Level_Invaders_State *invaders = &level_state.invaders;
+
+            invaders->movement_t += dt;
+            if (invaders->movement_t >= invaders->movement_target) {
+                invaders->movement_t -= invaders->movement_target;
+                invaders->enemy_p.x += 10.f;
+            }
+        } break;
     }
 }
 
@@ -298,6 +308,10 @@ internal void simulate_block_for_level(Block *block, Level level) {
     switch (level) {
         case L05_PONG: {
             block->p = add_v2(block->relative_p, level_state.pong.enemy_p);
+        } break;
+
+        case L06_INVADERS: {
+            block->p = add_v2(block->relative_p, level_state.invaders.enemy_p);
         } break;
 
         default: {
@@ -444,6 +458,9 @@ inline void start_game(Level level) {
                 create_invader((v2){25, y});
                 create_invader((v2){50, y});
             }
+
+            level_state.invaders.movement_target = 1.f;
+            level_state.invaders.enemy_p.x = -25.f;
         } break;
 
         invalid_default_case;

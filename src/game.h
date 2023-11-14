@@ -87,8 +87,16 @@ typedef struct {
 } Level_Pong_State;
 
 typedef struct {
+    v2 enemy_p;
+    f32 movement_t;
+    f32 movement_target;
+    int movement_count;
+} Level_Invaders_State;
+
+typedef struct {
     union {
         Level_Pong_State pong;
+        Level_Invaders_State invaders;
     };
 } Level_State;
 
