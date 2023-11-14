@@ -26,6 +26,7 @@ extern v2i sub_v2i(v2i, v2i);
 extern v2 mul_v2(v2, f32);
 extern v2 div_v2(v2, f32);
 u32 make_color_from_grey(u8);
+u32 make_color(u8, u8, u8);
 extern f32 lerp(f32, f32, f32);
 extern f32 absf(f32);
 extern f32 min(f32, f32);

@@ -6,15 +6,25 @@
 #define BALL_RIVAL_A                0x4
 #define BALL_RIVAL_B                0x8
 
+#define BALL_ADJUST_SPEED_BASED_ON_0    0x10
+#define BALL_ADJUST_SPEED_BASED_ON_1    0x20
+
 #define for_each_ball for (Ball *ball = balls; ball != balls + array_count(balls); ball++)
+
+#define BLOCK_RIVAL_A               0x1
+#define BLOCK_RIVAL_B               0x2
+
+#define RIVAL_A_COLOR   0xFFFF8934
+#define RIVAL_B_COLOR   0xFF3478FF
 
 typedef enum {
     L01_NORMAL,
     L02_WALL,
     L03_STADIUM,
-    L04_PONG,
+    L04_CHESS,
 
     L_COUNT,
+    L05_PONG,
 
     L_NEG = -1, //@HACK TO HAVE NEGATIVE VALUES (https://stackoverflow.com/a/38010712)
 } Level;
@@ -24,14 +34,18 @@ typedef enum {
 
     // Powerups
     POWER_INVINCIBILITY,
-    POWER_TRIPLE_SHOT,
     POWER_COMET,
+    POWER_TRIPLE_SHOT,
+
+    POWERUP_LAST = POWER_TRIPLE_SHOT,
 
     // Powerdowns
     POWER_INSTAKILL,
     POWER_STRONG_BLOCKS,
     POWER_INVERTED_CONTROLS,
     POWER_SLOW_PLAYER,
+
+    POWER_COUNT,
 } Power_Block_Kind;
 
 typedef struct {
@@ -40,6 +54,8 @@ typedef struct {
 } Power_Block;
 
 typedef struct {
+    u32 flags;
+
     v2 p;
     v2 half_size;
     f32 ball_speed_multiplier;

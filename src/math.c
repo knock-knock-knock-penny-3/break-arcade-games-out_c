@@ -27,6 +27,10 @@ u32 make_color_from_grey(u8 grey) {
     return (grey << 0) | (grey << 8) | (grey << 16) | (0xFF << 24);
 }
 
+u32 make_color(u8 r, u8 g, u8 b) {
+    return (b << 0) | (g << 8) | (r << 16) | (0xFF << 24);
+}
+
 inline f32 lerp(f32 a, f32 t, f32 b) {
     return (1-t)*a + t*b;
 }
