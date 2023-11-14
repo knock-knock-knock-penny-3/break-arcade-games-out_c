@@ -23,6 +23,7 @@ typedef enum {
     L03_STADIUM,
     L04_CHESS,
     L05_PONG,
+    L06_INVADERS,
 
     L_COUNT,
 

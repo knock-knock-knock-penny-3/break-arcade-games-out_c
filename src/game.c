@@ -71,6 +71,14 @@ internal void process_ball_when_dp_y_down(Ball *ball) {
     }
 }
 
+internal Block* get_next_available_block() {
+    Block *result = blocks + num_blocks++;
+    if (num_blocks >= array_count(blocks)) {
+        num_blocks = 0;
+    }
+    return result;
+}
+
 internal Ball* get_next_available_ball_and_zero() {
     for_each_ball {
         if (!(ball->flags & BALL_ACTIVE)) {
@@ -182,16 +190,47 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
     return false;
 }
 
+internal void create_invader(v2 p) {
+    char *invader[] = {
+        "  0     0",
+        "   0   0",
+        "  0000000",
+        " 00 000 00",
+        "00000000000",
+        "0 0000000 0",
+        "0 0     0 0",
+        "   00 00 "
+    };
+
+    f32 block_half_size = 2.f;
+    f32 original_x = p.x;
+
+    for (int i = 0; i < array_count(invader); i++) {
+        char *at = invader[i];
+        while (*at) {
+            if (*at++ != ' ') {
+                Block *block = get_next_available_block();
+                block->life = 1;
+                block->half_size = (v2){block_half_size, block_half_size};
+                block->relative_p = p;
+                block->color = make_color_from_grey(255);
+                block->ball_speed_multiplier = 1 + (f32)(array_count(invader) - i) * 1.25f / array_count(invader);
+            }
+
+            p.x += block_half_size * 2.f;
+        }
+        p.y -= block_half_size * 2.f;
+        p.x = original_x;
+    }
+}
+
 void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_offset, f32 block_x_half_size, f32 base_speed_multiplier, int rivalry) {
     x_offset += (f32)num_x * block_x_half_size * (2.f + (spacing.x * 2.f)) * .5f - block_x_half_size * (1.f + spacing.x);
     y_offset += -2.f;
 
     for (int y = 0; y < num_y; y++) {
         for (int x = 0; x < num_x; x++) {
-            Block *block = blocks + num_blocks++;
-            if (num_blocks >= array_count(blocks)) {
-                num_blocks = 0;
-            }
+            Block *block = get_next_available_block();
 
             block->life = 1;
             block->half_size = (v2){block_x_half_size, 2};
@@ -324,10 +363,7 @@ inline void start_game(Level level) {
             f32 y_offset = -4.f;
             for (int y = 0; y < num_y; y++) {
                 for (int x = 0; x < num_x; x++) {
-                    Block *block = blocks + num_blocks++;
-                    if (num_blocks >= array_count(blocks)) {
-                        num_blocks = 0;
-                    }
+                    Block *block = get_next_available_block();
 
                     block->life = 1;
                     block->half_size = (v2){block_x_half_size, 2};
@@ -396,6 +432,10 @@ inline void start_game(Level level) {
                 block->power_block = POWER_INSTAKILL;
             }
 
+        } break;
+
+        case L06_INVADERS: {
+            create_invader((v2){0, 0});
         } break;
 
         invalid_default_case;
