@@ -180,10 +180,10 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
     return false;
 }
 
-void create_block_block(int num_x, int num_y, f32 spacing) {
+void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_offset, int rivalry) {
     f32 block_x_half_size = 4.f;
-    f32 x_offset = (f32)num_x * block_x_half_size * (2.f + (spacing * 2.f)) * .5f - block_x_half_size * (1.f + spacing);
-    f32 y_offset = -2.f;
+    x_offset += (f32)num_x * block_x_half_size * (2.f + (spacing.x * 2.f)) * .5f - block_x_half_size * (1.f + spacing.x);
+    y_offset += -2.f;
 
     for (int y = 0; y < num_y; y++) {
         for (int x = 0; x < num_x; x++) {
@@ -195,20 +195,20 @@ void create_block_block(int num_x, int num_y, f32 spacing) {
             block->life = 1;
             block->half_size = (v2){block_x_half_size, 2};
 
-            block->p.x = x * block->half_size.x * (2.f + spacing * 2.f) - x_offset;
-            block->p.y = y * block->half_size.y * (2.f + spacing * 2.f) - y_offset;
+            block->p.x = x * block->half_size.x * (2.f + spacing.x * 2.f) - x_offset;
+            block->p.y = y * block->half_size.y * (2.f + spacing.y * 2.f) - y_offset;
 
             u8 k = y * 255 / num_y;
             block->color = make_color(255, k, 128);
             block->ball_speed_multiplier = 1 + (f32)y * 1.25f / num_y;
 
-//            if (x % 2 == y % 2) {
-//                block->flags |= BLOCK_RIVAL_A;
-//                block->color = RIVAL_A_COLOR;
-//            } else {
-//                block->flags |= BLOCK_RIVAL_B;
-//                block->color = RIVAL_B_COLOR;
-//            }
+            if (rivalry == 1) {
+                block->flags |= BLOCK_RIVAL_A;
+                block->color = RIVAL_A_COLOR;
+            } else if (rivalry == 2) {
+                block->flags |= BLOCK_RIVAL_B;
+                block->color = RIVAL_B_COLOR;
+            }
 
 //            if (y == 0) {
 //                block->power_block = POWER_INVERTED_CONTROLS;
@@ -247,16 +247,6 @@ inline void start_game(Level level) {
     balls[0].flags |= BALL_ACTIVE;
     balls[0].desired_p = balls[0].p; //@Hack
 
-//    balls[1].base_speed = 50;
-//    balls[1].p.x = 0.f;
-//    balls[1].p.y = 40;
-//    balls[1].dp.x = 0.f;
-//    balls[1].dp.y = balls[0].base_speed;
-//    balls[1].half_size = (v2){.75, .75};
-//    balls[1].speed_multiplier = 1.f;
-//    balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
-//    balls[1].desired_p = balls[0].p; //@Hack
-
     player_p.y = -40;
     player_half_size = (v2){10, 2};
 
@@ -276,7 +266,7 @@ inline void start_game(Level level) {
 
     switch (level) {
         case L01_NORMAL: {
-            create_block_block(19, 9, .1f);
+            create_block_block(19, 9, (v2){.1f, .1f}, 0.f, 0.f, 0);
         } break;
 
         case L02_WALL: {
@@ -318,32 +308,39 @@ inline void start_game(Level level) {
         } break;
 
         case L03_STADIUM: {
-            int num_x = 21;
-            int num_y = 6;
-            f32 block_x_half_size = 4.f;
-            f32 x_offset = (f32)num_x * block_x_half_size- block_x_half_size;
-            f32 y_offset = 0.f;
-            for (int y = 0; y < num_y; y++) {
-                for (int x = 0; x < num_x; x++) {
-                    Block *block = blocks+num_blocks++;
-                    if (num_blocks >= array_count(blocks)) {
-                        num_blocks = 0;
-                    }
+            create_block_block(8, 8, (v2){.1f, .1f}, 40.f, 0.f, 1);
+            create_block_block(8, 8, (v2){.1f, .1f}, -40.f, 0.f, 2);
 
-                    block->life = 1;
-                    block->half_size = (v2){block_x_half_size, 2};
+            balls[0].flags |= BALL_RIVAL_A | BALL_ADJUST_SPEED_BASED_ON_1; //@Hack
 
-                    block->p.x = x*block->half_size.x*2.f - x_offset;
-                    block->p.y = y*block->half_size.y*4.f - y_offset;
-                    block->color = make_color_from_grey(y*255/num_y);
-                    block->ball_speed_multiplier = 1+ (f32)y*1.25f/(f32)num_y;
-                }
-
-            }
+            balls[1].base_speed = 50;
+            balls[1].p.x = 0.f;
+            balls[1].p.y = 40;
+            balls[1].dp.x = 0.f;
+            balls[1].dp.y = balls[0].base_speed;
+            balls[1].half_size = (v2){.75, .75};
+            balls[1].speed_multiplier = 1.f;
+            balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
+            balls[1].desired_p = balls[0].p; //@Hack
         } break;
 
         case L04_CHESS: {
+            create_block_block(20, 4, (v2){0.f, 1.f}, 0.f, 0.f, 1);
+            create_block_block(20, 4, (v2){0.f, 1.f}, 0.f, 4.f, 2);
 
+            create_block_block(20, 2, (v2){0.f, 0.f}, 0.f, -32.f, 0);
+
+            balls[0].flags |= BALL_RIVAL_A | BALL_ADJUST_SPEED_BASED_ON_1; //@Hack
+
+            balls[1].base_speed = 50;
+            balls[1].p.x = 0.f;
+            balls[1].p.y = 40;
+            balls[1].dp.x = 0.f;
+            balls[1].dp.y = balls[0].base_speed;
+            balls[1].half_size = (v2){.75, .75};
+            balls[1].speed_multiplier = 1.f;
+            balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
+            balls[1].desired_p = balls[0].p; //@Hack
         } break;
 
         invalid_default_case;
