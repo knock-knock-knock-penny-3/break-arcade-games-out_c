@@ -225,7 +225,7 @@ inline void test_for_win_condition() {
     }
 }
 
-internal void simulate_level(Level level, f32 dt) {
+internal void simulate_level(Game *game, Level level, f32 dt) {
     switch (level) {
         case L05_PONG: {
             Level_Pong_State *pong = &level_state.pong;
@@ -234,11 +234,19 @@ internal void simulate_level(Level level, f32 dt) {
             if (balls[0].p.x > pong->enemy_p.x) ddp.x += 100.f;
             else if (balls[0].p.x < pong->enemy_p.x) ddp.x += -100.f;
 
-            pong->enemy_dp = add_v2(pong->enemy_dp, mul_v2(ddp, dt));
-            pong->enemy_p = add_v2(
-                                add_v2(pong->enemy_p, mul_v2(pong->enemy_dp, dt)),
+            v2 desired_dp = add_v2(pong->enemy_dp, mul_v2(ddp, dt));
+            v2 desired_p = add_v2(
+                                add_v2(pong->enemy_p, mul_v2(desired_dp, dt)),
                                 mul_v2(ddp, square(dt))
                             );
+
+            if (desired_p.x > game->width - 10.f) {
+                desired_p.x = game->width - 10.f;
+                desired_dp = mul_v2(desired_dp, -.5f);
+            }
+
+            pong->enemy_dp = desired_dp;
+            pong->enemy_p = desired_p;
         } break;
     }
 }
@@ -449,7 +457,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
     }
 
-    simulate_level(current_level, dt);
+    simulate_level(game, current_level, dt);
 
     clear_screen_and_draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100, 0xFF220500);
 
