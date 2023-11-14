@@ -82,6 +82,7 @@ typedef struct {
 typedef struct {
     v2 enemy_p;
     v2 enemy_dp;
+    v2 enemy_half_size;
 } Level_Pong_State;
 
 typedef struct {
