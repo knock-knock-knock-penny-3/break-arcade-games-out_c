@@ -26,6 +26,8 @@ int number_of_triple_shots;
 f32 strong_blocks_t; // in seconds
 f32 inverted_controls_t; // in seconds
 
+Level_State level_state;
+
 Level current_level;
 #if DEVELOPMENT
 b32 slowmotion = false;
@@ -180,8 +182,7 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
     return false;
 }
 
-void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_offset, int rivalry) {
-    f32 block_x_half_size = 4.f;
+void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_offset, f32 block_x_half_size, int rivalry) {
     x_offset += (f32)num_x * block_x_half_size * (2.f + (spacing.x * 2.f)) * .5f - block_x_half_size * (1.f + spacing.x);
     y_offset += -2.f;
 
@@ -195,8 +196,8 @@ void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_of
             block->life = 1;
             block->half_size = (v2){block_x_half_size, 2};
 
-            block->p.x = x * block->half_size.x * (2.f + spacing.x * 2.f) - x_offset;
-            block->p.y = y * block->half_size.y * (2.f + spacing.y * 2.f) - y_offset;
+            block->relative_p.x = x * block->half_size.x * (2.f + spacing.x * 2.f) - x_offset;
+            block->relative_p.y = y * block->half_size.y * (2.f + spacing.y * 2.f) - y_offset;
 
             u8 k = y * 255 / num_y;
             block->color = make_color(255, k, 128);
@@ -224,6 +225,37 @@ inline void test_for_win_condition() {
     }
 }
 
+internal void simulate_level(Level level, f32 dt) {
+    switch (level) {
+        case L05_PONG: {
+            Level_Pong_State *pong = &level_state.pong;
+
+            v2 ddp = mul_v2(pong->enemy_dp, -10.f);
+            if (balls[0].p.x > pong->enemy_p.x) ddp.x += 100.f;
+            else if (balls[0].p.x < pong->enemy_p.x) ddp.x += -100.f;
+
+            pong->enemy_dp = add_v2(pong->enemy_dp, mul_v2(ddp, dt));
+            pong->enemy_p = add_v2(
+                                add_v2(pong->enemy_p, mul_v2(pong->enemy_dp, dt)),
+                                mul_v2(ddp, square(dt))
+                            );
+        } break;
+    }
+}
+
+internal void simulate_block_for_level(Block *block, Level level) {
+    switch (level) {
+        case L05_PONG: {
+//            block->p = add_v2(block->p, level_state.pong.enemy_p);
+            block->p = add_v2(block->relative_p, level_state.pong.enemy_p);
+        } break;
+
+        default: {
+            block->p = block->relative_p;
+        }
+    }
+}
+
 inline void start_game(Level level) {
     advance_level = false;
 
@@ -231,6 +263,8 @@ inline void start_game(Level level) {
     else if (level < 0) level = L_COUNT - 1;
 
     current_level = level;
+
+    zero_struct(level_state);
 
     zero_array(balls);
     zero_array(power_blocks);
@@ -266,7 +300,7 @@ inline void start_game(Level level) {
 
     switch (level) {
         case L01_NORMAL: {
-            create_block_block(19, 9, (v2){.1f, .1f}, 0.f, 0.f, 0);
+            create_block_block(19, 9, (v2){.1f, .1f}, 0.f, 0.f, 4.f, 0);
         } break;
 
         case L02_WALL: {
@@ -288,9 +322,9 @@ inline void start_game(Level level) {
                     block->life = 1;
                     block->half_size = (v2){block_x_half_size, 2};
 
-                    if (y % 2) block->p.x = x*block->half_size.x*2.0f - x_offset;
-                    else block->p.x = x*block->half_size.x*2.0f - x_offset + block->half_size.x;
-                    block->p.y = y*block->half_size.y*2.0f - y_offset;
+                    if (y % 2) block->relative_p.x = x*block->half_size.x*2.0f - x_offset;
+                    else block->relative_p.x = x*block->half_size.x*2.0f - x_offset + block->half_size.x;
+                    block->relative_p.y = y*block->half_size.y*2.0f - y_offset;
 
                     u8 k = y * 255 / num_y;
                     block->color = make_color(k/2, k, 128);
@@ -308,8 +342,8 @@ inline void start_game(Level level) {
         } break;
 
         case L03_STADIUM: {
-            create_block_block(8, 8, (v2){.1f, .1f}, 40.f, 0.f, 1);
-            create_block_block(8, 8, (v2){.1f, .1f}, -40.f, 0.f, 2);
+            create_block_block(8, 8, (v2){.1f, .1f}, 40.f, 0.f, 4.f, 1);
+            create_block_block(8, 8, (v2){.1f, .1f}, -40.f, 0.f, 4.f, 2);
 
             balls[0].flags |= BALL_RIVAL_A | BALL_ADJUST_SPEED_BASED_ON_1; //@Hack
 
@@ -325,10 +359,10 @@ inline void start_game(Level level) {
         } break;
 
         case L04_CHESS: {
-            create_block_block(20, 4, (v2){0.f, 1.f}, 0.f, 0.f, 1);
-            create_block_block(20, 4, (v2){0.f, 1.f}, 0.f, 4.f, 2);
+            create_block_block(20, 4, (v2){0.f, 1.f}, 0.f, 0.f, 4.f, 1);
+            create_block_block(20, 4, (v2){0.f, 1.f}, 0.f, 4.f, 4.f, 2);
 
-            create_block_block(20, 2, (v2){0.f, 0.f}, 0.f, -32.f, 0);
+            create_block_block(20, 2, (v2){0.f, 0.f}, 0.f, -32.f, 4.f, 0);
 
             balls[0].flags |= BALL_RIVAL_A | BALL_ADJUST_SPEED_BASED_ON_1; //@Hack
 
@@ -341,6 +375,10 @@ inline void start_game(Level level) {
             balls[1].speed_multiplier = 1.f;
             balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
             balls[1].desired_p = balls[0].p; //@Hack
+        } break;
+
+        case L05_PONG: {
+            create_block_block(8, 2, (v2){.05f, .05f}, 0.f, -30.f, 2.f, 0);
         } break;
 
         invalid_default_case;
@@ -411,10 +449,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
     }
 
+    simulate_level(current_level, dt);
+
     clear_screen_and_draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100, 0xFF220500);
 
     for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) continue;
+
+        simulate_block_for_level(block, current_level);
 
         if (!first_ball_movement) {
             for_each_ball {

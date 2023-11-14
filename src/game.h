@@ -22,9 +22,9 @@ typedef enum {
     L02_WALL,
     L03_STADIUM,
     L04_CHESS,
+    L05_PONG,
 
     L_COUNT,
-    L05_PONG,
 
     L_NEG = -1, //@HACK TO HAVE NEGATIVE VALUES (https://stackoverflow.com/a/38010712)
 } Level;
@@ -57,6 +57,7 @@ typedef struct {
     u32 flags;
 
     v2 p;
+    v2 relative_p;
     v2 half_size;
     f32 ball_speed_multiplier;
     int life;
@@ -77,6 +78,17 @@ typedef struct {
     f32 base_speed;
     f32 speed_multiplier;
 } Ball;
+
+typedef struct {
+    v2 enemy_p;
+    v2 enemy_dp;
+} Level_Pong_State;
+
+typedef struct {
+    union {
+        Level_Pong_State pong;
+    };
+} Level_State;
 
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);

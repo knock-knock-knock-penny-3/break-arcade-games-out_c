@@ -55,3 +55,7 @@ inline f32 max(f32 a, f32 b) {
     }
     return b;
 }
+
+inline f32 square(f32 a) {
+    return a * a;
+}
