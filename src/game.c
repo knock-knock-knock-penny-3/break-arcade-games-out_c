@@ -257,7 +257,6 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
 internal void simulate_block_for_level(Block *block, Level level) {
     switch (level) {
         case L05_PONG: {
-//            block->p = add_v2(block->p, level_state.pong.enemy_p);
             block->p = add_v2(block->relative_p, level_state.pong.enemy_p);
         } break;
 
@@ -391,6 +390,11 @@ inline void start_game(Level level) {
         case L05_PONG: {
             create_block_block(8, 2, (v2){.05f, .05f}, 0.f, -30.f, 2.f, 2.f, 0);
             level_state.pong.enemy_half_size.x = 8 * (2.f + .05f);
+
+            for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
+                if (!block->life) continue;
+                block->power_block = POWER_INSTAKILL;
+            }
 
         } break;
 
