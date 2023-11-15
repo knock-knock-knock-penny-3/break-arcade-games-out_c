@@ -36,6 +36,7 @@ typedef enum {
     // Powerups
     POWER_INVINCIBILITY,
     POWER_COMET,
+//    POWER_INCREASE_BALL_SIZE,
     POWER_TRIPLE_SHOT,
 
     POWERUP_LAST = POWER_TRIPLE_SHOT,
@@ -74,6 +75,7 @@ typedef struct {
     v2 dp;
     v2 half_size;
 
+    v2 collision_test_p;
     v2 desired_p;
 
     f32 base_speed;
@@ -90,7 +92,8 @@ typedef struct {
     v2 enemy_p;
     f32 movement_t;
     f32 movement_target;
-    int movement_count;
+    b32 is_moving_right;
+    b32 move_down;
 } Level_Invaders_State;
 
 typedef struct {

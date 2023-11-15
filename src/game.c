@@ -133,17 +133,17 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
 
     v2 collision_point, diff, t, target;
 
-    diff.y = ball->desired_p.y - ball->p.y;
+    diff.y = ball->collision_test_p.y - ball->p.y;
     if (diff.y != 0) {
         if (ball->dp.y > 0) collision_point.y = block->p.y - block->half_size.y - ball->half_size.y;
         else collision_point.y = block->p.y + block->half_size.y + ball->half_size.y;
 
         t.y = (collision_point.y - ball->p.y) / diff.y;
         if (t.y >= 0.f && t.y <= 1.f) {
-            target.x = lerp(ball->p.x, t.y, ball->desired_p.x);
+            target.x = lerp(ball->p.x, t.y, ball->collision_test_p.x);
             if (target.x + ball->half_size.x > block->p.x - block->half_size.x &&
                 target.x - ball->half_size.x < block->p.x + block->half_size.x) {
-                ball->desired_p.y = lerp(ball->p.y, t.y, ball->desired_p.y);
+                ball->desired_p.y = lerp(ball->p.y, t.y, ball->collision_test_p.y);
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
 
                 if (ball->dp.y > 0) {
@@ -162,17 +162,17 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
             }
         }
     }
-    diff.x = ball->desired_p.x - ball->p.x;
+    diff.x = ball->collision_test_p.x - ball->p.x;
     if (diff.x != 0) {
         if (ball->dp.x > 0) collision_point.x = block->p.x - block->half_size.x - ball->half_size.x;
         else collision_point.x = block->p.x + block->half_size.x + ball->half_size.x;
 
         t.x = (collision_point.x - ball->p.x) / diff.x;
         if (t.x >= 0.f && t.x <= 1.f) {
-            target.y = lerp(ball->p.y, t.x, ball->desired_p.y);
+            target.y = lerp(ball->p.y, t.x, ball->collision_test_p.y);
             if (target.y + ball->half_size.y > block->p.y - block->half_size.y &&
                 target.y - ball->half_size.y < block->p.y + block->half_size.y) {
-                ball->desired_p.x = lerp(ball->p.x, t.x, ball->desired_p.x);
+                ball->desired_p.x = lerp(ball->p.x, t.x, ball->collision_test_p.x);
                 ball->dp.x *= -1;
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
 
@@ -202,7 +202,7 @@ internal void create_invader(v2 p) {
         "   00 00 "
     };
 
-    f32 block_half_size = .8f;
+    f32 block_half_size = .6f;
     p.x -= block_half_size * 11;
     f32 original_x = p.x;
 
@@ -216,6 +216,10 @@ internal void create_invader(v2 p) {
                 block->relative_p = p;
                 block->color = make_color_from_grey(255);
                 block->ball_speed_multiplier = 1 + (f32)(array_count(invader) - i) * .75f / array_count(invader);
+
+                if (random_choice(20)) {
+                    block->power_block = random_int_in_range(1, POWERUP_LAST);
+                }
             }
 
             p.x += block_half_size * 2.f;
@@ -298,7 +302,23 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
             invaders->movement_t += dt;
             if (invaders->movement_t >= invaders->movement_target) {
                 invaders->movement_t -= invaders->movement_target;
-                invaders->enemy_p.x += 10.f;
+
+                if (invaders->move_down) {
+                    invaders->enemy_p.y -= 2.5f;
+                    invaders->move_down = false;
+                } else if (invaders->is_moving_right) {
+                    invaders->enemy_p.x += 2.5f;
+                    if (invaders->enemy_p.x >= 25) {
+                        invaders->is_moving_right = !invaders->is_moving_right;
+                        invaders->move_down = true;
+                        }
+                } else {
+                    invaders->enemy_p.x -= 2.5f;
+                    if (invaders->enemy_p.x <= -25) {
+                        invaders->is_moving_right = !invaders->is_moving_right;
+                        invaders->move_down = true;
+                    }
+                }
             }
         } break;
     }
@@ -343,7 +363,8 @@ inline void start_game(Level level) {
     balls[0].half_size = (v2){.75, .75};
     balls[0].speed_multiplier = 1.f;
     balls[0].flags |= BALL_ACTIVE;
-    balls[0].desired_p = balls[0].p; //@Hack
+    balls[0].desired_p = balls[0].p;
+    balls[0].collision_test_p = balls[0].p;
 
     player_p.y = -40;
     player_half_size = (v2){10, 2};
@@ -416,7 +437,8 @@ inline void start_game(Level level) {
             balls[1].half_size = (v2){.75, .75};
             balls[1].speed_multiplier = 1.f;
             balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
-            balls[1].desired_p = balls[0].p; //@Hack
+            balls[1].desired_p = balls[0].p;
+            balls[1].collision_test_p = balls[0].p;
         } break;
 
         case L04_CHESS: {
@@ -435,7 +457,8 @@ inline void start_game(Level level) {
             balls[1].half_size = (v2){.75, .75};
             balls[1].speed_multiplier = 1.f;
             balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
-            balls[1].desired_p = balls[0].p; //@Hack
+            balls[1].desired_p = balls[0].p;
+            balls[1].collision_test_p = balls[0].p;
         } break;
 
         case L05_PONG: {
@@ -461,6 +484,7 @@ inline void start_game(Level level) {
 
             level_state.invaders.movement_target = 1.f;
             level_state.invaders.enemy_p.x = -25.f;
+            level_state.invaders.is_moving_right = true;
         } break;
 
         invalid_default_case;
@@ -529,6 +553,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             if (invincibility_t <= 0) start_game(current_level);    // LOST
             else reset_and_reverse_ball_dp_y(ball);                 // INVINCIBILITY
         }
+
+        ball->collision_test_p = ball->desired_p;
     }
 
     simulate_level(game, current_level, dt);

@@ -32,5 +32,9 @@ extern f32 absf(f32);
 extern f32 min(f32, f32);
 extern f32 max(f32, f32);
 extern f32 square(f32);
+extern u32 random_u32();
+extern b32 random_b32();
+extern int random_int_in_range(int, int);
+extern b32 random_choice(int);
 
 #endif // BREAKOUT_MATH_H_INCLUDED

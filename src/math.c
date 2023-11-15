@@ -59,3 +59,31 @@ inline f32 max(f32 a, f32 b) {
 inline f32 square(f32 a) {
     return a * a;
 }
+
+u32 random_state = 12345;
+
+inline u32 random_u32() {
+    u32 result = random_state;
+
+    result ^= result << 13;
+    result ^= result >> 17;
+    result ^= result << 5;
+    random_state = result;
+
+    return result;
+}
+
+inline b32 random_b32() {
+    return random_u32() % 2;
+}
+
+inline b32 random_choice(int chance) {
+    return random_u32() % chance == 0;
+}
+
+inline int random_int_in_range(int min, int max) { //inclusive
+    int range = max - min + 1;
+    int result = random_u32() % range;
+    result += min;
+    return result;
+}
