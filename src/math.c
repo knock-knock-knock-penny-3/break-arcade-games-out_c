@@ -11,6 +11,10 @@ inline v2 add_v2(v2 a, v2 b) {
     return (v2){a.x + b.x, a.y + b.y};
 }
 
+inline v2 sub_v2(v2 a, v2 b) {
+    return (v2){a.x - b.x, a.y - b.y};
+}
+
 inline v2i sub_v2i(v2i a, v2i b) {
     return (v2i){a.x - b.x, a.y - b.y};
 }
@@ -58,6 +62,10 @@ inline f32 max(f32 a, f32 b) {
 
 inline f32 square(f32 a) {
     return a * a;
+}
+
+inline f32 len_sq(v2 v) {
+    return square(v.x) + square(v.y);
 }
 
 u32 random_state = 12345;

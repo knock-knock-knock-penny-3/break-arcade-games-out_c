@@ -22,6 +22,7 @@ typedef struct {
 // PROTOTYPES
 int clamp(int, int, int);
 extern v2 add_v2(v2, v2);
+extern v2 sub_v2(v2, v2);
 extern v2i sub_v2i(v2i, v2i);
 extern v2 mul_v2(v2, f32);
 extern v2 div_v2(v2, f32);
@@ -36,5 +37,6 @@ extern u32 random_u32();
 extern b32 random_b32();
 extern int random_int_in_range(int, int);
 extern b32 random_choice(int);
+extern f32 len_sq(v2);
 
 #endif // BREAKOUT_MATH_H_INCLUDED

@@ -123,6 +123,12 @@ internal void block_destroyed(Block *block) {
     if (block->power_block) {
         spawn_power_block(block->power_block, block->p);
     }
+
+    for (int i = 0; i < array_count(block->neighbours); i++) {
+        if (!block->neighbours[i]) break;
+        block->neighbours[i]->life = 0;
+        test_for_win_condition();
+    }
 }
 
 internal b32 do_ball_block_collision(Ball *ball, Block *block) {
@@ -226,6 +232,29 @@ internal void create_invader(v2 p) {
         }
         p.y -= block_half_size * 2.f;
         p.x = original_x;
+    }
+}
+
+internal void calculate_all_neighbours() {
+    for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
+        if (!block->life) break;
+
+        for (Block *test_block = blocks; test_block  != blocks + array_count(blocks); test_block ++) {
+            if (!test_block->life) break;
+            if (test_block == block) continue;
+            if (block->relative_p.x != test_block->relative_p.x && block->relative_p.y != test_block->relative_p.y) continue;
+
+            v2 diff = sub_v2(block->relative_p, test_block->relative_p);
+            f32 len = len_sq(diff);
+            f32 size = max(block->half_size.x, block->half_size.y);
+            if (len < square(size * 2.2f)) {
+                for (int i = 0; i < array_count(block->neighbours); i++) {
+                    if (block->neighbours[i]) continue;
+                    block->neighbours[i] = test_block;
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -485,10 +514,14 @@ inline void start_game(Level level) {
             level_state.invaders.movement_target = 1.f;
             level_state.invaders.enemy_p.x = -25.f;
             level_state.invaders.is_moving_right = true;
+
+            calculate_all_neighbours();
         } break;
 
         invalid_default_case;
     }
+
+    calculate_all_neighbours();
 }
 
 void simulate_game(Game *game, Input *input, f64 dt) {

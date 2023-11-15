@@ -55,7 +55,7 @@ typedef struct {
     v2 p;
 } Power_Block;
 
-typedef struct {
+typedef struct Block {
     u32 flags;
 
     v2 p;
@@ -66,6 +66,8 @@ typedef struct {
     u32 color;
 
     Power_Block_Kind power_block;
+
+    struct Block *neighbours[4];
 } Block;
 
 typedef struct {
