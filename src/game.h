@@ -96,6 +96,7 @@ typedef struct {
     f32 movement_target;
     b32 is_moving_right;
     b32 move_down;
+    b32 do_invader_player_collision_test;
 } Level_Invaders_State;
 
 typedef struct {

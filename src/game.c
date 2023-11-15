@@ -329,6 +329,7 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
 
         case L06_INVADERS: {
             Level_Invaders_State *invaders = &level_state.invaders;
+            invaders->do_invader_player_collision_test = false;
 
             invaders->movement_t += dt;
             if (invaders->movement_t >= invaders->movement_target) {
@@ -337,6 +338,7 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
                 if (invaders->move_down) {
                     invaders->enemy_p.y -= 2.5f;
                     invaders->move_down = false;
+                    invaders->do_invader_player_collision_test = true;
                 } else if (invaders->is_moving_right) {
                     invaders->enemy_p.x += 2.5f;
                     if (invaders->enemy_p.x >= 25) {
@@ -363,6 +365,11 @@ internal void simulate_block_for_level(Block *block, Level level) {
 
         case L06_INVADERS: {
             block->p = add_v2(block->relative_p, level_state.invaders.enemy_p);
+            if (level_state.invaders.do_invader_player_collision_test) {
+                if (block->p.y - block->half_size.y < player_p.y + player_half_size.y) {
+                    start_game(current_level);
+                }
+            }
         } break;
 
         default: {
