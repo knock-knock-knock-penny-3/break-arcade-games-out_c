@@ -512,7 +512,7 @@ inline void start_game(Level level) {
         } break;
 
         case L05_PONG: {
-            create_block_block(8, 2, (v2){.05f, .05f}, 0.f, -30.f, (v2){2.f, 2.f}, 2.f, 0);
+            create_block_block(12, 3, (v2){.05f, .05f}, 0.f, -30.f, (v2){1.5f, 1.5f}, 2.f, 0);
             level_state.pong.enemy_half_size.x = 8 * (2.f + .05f);
 
             for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
@@ -541,8 +541,6 @@ inline void start_game(Level level) {
 
         invalid_default_case;
     }
-
-    calculate_all_neighbours();
 }
 
 void simulate_game(Game *game, Input *input, f64 dt) {
