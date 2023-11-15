@@ -517,7 +517,10 @@ inline void start_game(Level level) {
 
             for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
                 if (!block->life) continue;
-                block->power_block = POWER_INSTAKILL;
+
+                if (random_choice(3)) {
+                    block->power_block = random_int_in_range(POWERUP_LAST + 1, POWER_COUNT - 1);
+                }
             }
 
         } break;
