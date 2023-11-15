@@ -126,8 +126,10 @@ internal void block_destroyed(Block *block) {
 
     for (int i = 0; i < array_count(block->neighbours); i++) {
         if (!block->neighbours[i]) break;
-        block->neighbours[i]->life = 0;
-        test_for_win_condition();
+        if (block->neighbours[i]->life) {
+            block->neighbours[i]->life = 0;
+            test_for_win_condition();
+        }
     }
 }
 
