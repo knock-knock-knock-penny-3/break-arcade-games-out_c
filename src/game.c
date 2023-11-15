@@ -662,6 +662,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                     inverted_controls_t+= 5.f;
                 } break;
 
+                case POWER_SLOW_PLAYER: {
+
+                } break;
+
                 invalid_default_case;
             }
             power_block->kind = POWER_INACTIVE;
