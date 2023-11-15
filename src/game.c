@@ -208,7 +208,7 @@ internal void create_invader(v2 p) {
         "   00 00 "
     };
 
-    f32 block_half_size = .6f;
+    f32 block_half_size = .8f;
     p.x -= block_half_size * 11;
     f32 original_x = p.x;
 
@@ -221,7 +221,7 @@ internal void create_invader(v2 p) {
                 block->half_size = (v2){block_half_size, block_half_size};
                 block->relative_p = p;
                 block->color = make_color_from_grey(255);
-                block->ball_speed_multiplier = 1 + (f32)(array_count(invader) - i) * .75f / array_count(invader);
+                block->ball_speed_multiplier = 1 + (f32)(array_count(invader) - i) * .5f / array_count(invader);
 
                 if (random_choice(20)) {
                     block->power_block = random_int_in_range(1, POWERUP_LAST);
@@ -511,7 +511,7 @@ inline void start_game(Level level) {
                 create_invader((v2){50, y});
             }
 
-            level_state.invaders.movement_target = 1.f;
+            level_state.invaders.movement_target = 1.25f;
             level_state.invaders.enemy_p.x = -25.f;
             level_state.invaders.is_moving_right = true;
 
