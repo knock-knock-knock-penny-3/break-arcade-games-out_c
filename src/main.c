@@ -27,11 +27,9 @@ int main() {
         SDL_DestroyWindow(window);
         SDL_Quit();
     }
-    SDL_RenderSetLogicalSize(game.renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+    game.screen_size = (v2i){SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_RenderSetLogicalSize(game.renderer, game.screen_size.x, game.screen_size.y);
     SDL_SetRenderDrawBlendMode(game.renderer,SDL_BLENDMODE_BLEND);
-
-    game.width = SCREEN_WIDTH;
-    game.height = SCREEN_HEIGHT;
 
     Input input = {0};
     u32 last_counter = SDL_GetPerformanceCounter();
@@ -61,9 +59,8 @@ int main() {
 
                 case SDL_WINDOWEVENT: {
                     if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                        game.width = event.window.data1;
-                        game.height = event.window.data2;
-                        SDL_RenderSetLogicalSize(game.renderer, game.width, game.height);
+                        game.screen_size = (v2i){event.window.data1, event.window.data2};
+                        SDL_RenderSetLogicalSize(game.renderer, game.screen_size.x, game.screen_size.y);
                     }
                 } break;
 
@@ -94,7 +91,7 @@ input.buttons[b].is_down = state[vk];
 
         v2i mouse_pointer;
         SDL_GetMouseState(&mouse_pointer.x,&mouse_pointer.y);
-        mouse_pointer.y = game.height - mouse_pointer.y;
+        mouse_pointer.y = game.screen_size.y - mouse_pointer.y;
 
         input.mouse_dp = sub_v2i(mouse_pointer, input.mouse_p);
 

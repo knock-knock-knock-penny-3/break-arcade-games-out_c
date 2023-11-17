@@ -20,6 +20,24 @@ typedef double f64;
 
 typedef int b32;
 
+typedef struct {
+    union {
+        struct {
+            f32 x, y;
+        };
+        f32 e[2];
+    };
+} v2;
+
+typedef struct {
+    union {
+        struct {
+            int x, y;
+        };
+        int e[2];
+    };
+} v2i;
+
 #define true 1
 #define false 0
 
@@ -29,7 +47,7 @@ typedef int b32;
 global_variable b32 running = true;
 
 typedef struct {
-    unsigned short width, height;
+    v2i screen_size;
     SDL_Renderer *renderer;
 } Game;
 

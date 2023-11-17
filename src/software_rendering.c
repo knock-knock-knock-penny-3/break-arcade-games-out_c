@@ -32,12 +32,12 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
     SDL_SetRenderDrawColor(game->renderer, rgba.r, rgba.g, rgba.b, rgba.a);
 
     // Draw a rectangle of the selected color
-    x0 = clamp(0, x0, game->width);
-    x1 = clamp(0, x1, game->width);
-    y0 = clamp(0, y0, game->height);
-    y1 = clamp(0, y1, game->height);
+    x0 = clamp(0, x0, game->screen_size.x);
+    x1 = clamp(0, x1, game->screen_size.x);
+    y0 = clamp(0, y0, game->screen_size.y);
+    y1 = clamp(0, y1, game->screen_size.y);
 
-    SDL_Rect rect = {x0, game->height - y1, x1-x0, y1-y0};
+    SDL_Rect rect = {x0, game->screen_size.y - y1, x1-x0, y1-y0};
     SDL_RenderFillRect(game->renderer, &rect);
 }
 
@@ -159,8 +159,8 @@ v2 pixels_to_world(Game *game, v2i pixels_coord) {
     f32 aspect_multiplier = calculate_aspect_multiplier(game);
 
     v2 result;
-    result.x = (f32)pixels_coord.x - (game->width * .5f);
-    result.y = (f32)pixels_coord.y - (game->height * .5f);
+    result.x = (f32)pixels_coord.x - (game->screen_size.x * .5f);
+    result.y = (f32)pixels_coord.y - (game->screen_size.y * .5f);
 
     result.x /= aspect_multiplier;
     result.x /= scale;
@@ -172,11 +172,11 @@ v2 pixels_to_world(Game *game, v2i pixels_coord) {
 }
 
 f32 calculate_aspect_multiplier(Game *game) {
-    f32 aspect_multiplier = game->height;
+    f32 aspect_multiplier = game->screen_size.y;
     f32 ratio = 16 / 9;
 
-    if (game->width / game->height < ratio) {
-        aspect_multiplier = game->width / ratio;
+    if (game->screen_size.x / game->screen_size.y < ratio) {
+        aspect_multiplier = game->screen_size.x / ratio;
     }
 
     return aspect_multiplier;
@@ -191,8 +191,8 @@ void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
     p.x *= aspect_multiplier * scale;
     p.y *= aspect_multiplier * scale;
 
-    p.x += game->width * .5f;
-    p.y += game->height * .5f;
+    p.x += game->screen_size.x * .5f;
+    p.y += game->screen_size.y * .5f;
 
     int x0 = (int)(p.x - half_size.x);
     int y0 = (int)(p.y - half_size.y);
@@ -211,8 +211,8 @@ void clear_screen_and_draw_rect(Game *game, v2 p, v2 half_size, u32 color, u32 c
     p.x *= aspect_multiplier * scale;
     p.y *= aspect_multiplier * scale;
 
-    p.x += game->width * .5f;
-    p.y += game->height * .5f;
+    p.x += game->screen_size.x * .5f;
+    p.y += game->screen_size.y * .5f;
 
     int x0 = (int)(p.x - half_size.x);
     int y0 = (int)(p.y - half_size.y);
@@ -224,8 +224,8 @@ void clear_screen_and_draw_rect(Game *game, v2 p, v2 half_size, u32 color, u32 c
 #if DEVELOPMENT
     clear_color = 0xFF665944;
 #endif
-    draw_rect_in_pixels(game, 0, 0, x0, game->height, clear_color);           // left border
-    draw_rect_in_pixels(game, x1, 0, game->width, game->height, clear_color); // right border
-    draw_rect_in_pixels(game, x0, y1, x1, game->height, clear_color);         // top border
+    draw_rect_in_pixels(game, 0, 0, x0, game->screen_size.y, clear_color);           // left border
+    draw_rect_in_pixels(game, x1, 0, game->screen_size.x, game->screen_size.y, clear_color); // right border
+    draw_rect_in_pixels(game, x0, y1, x1, game->screen_size.y, clear_color);         // top border
     draw_rect_in_pixels(game, x0, 0, x1, y0, color);                          // bottom border
 }
