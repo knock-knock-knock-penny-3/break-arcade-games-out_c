@@ -9,6 +9,8 @@ v2 player_dp;
 v2 player_half_size;
 int player_life;
 
+int score;
+
 Block blocks[1024];
 int num_blocks;
 int blocks_destroyed;
@@ -296,6 +298,8 @@ void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_of
 
 inline void test_for_win_condition() {
     blocks_destroyed++;
+    score += player_life;
+
     if (blocks_destroyed == num_blocks) {
         advance_level = true;
     }
@@ -704,6 +708,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     for (int i = 0; i < player_life; i++) {
         draw_rect(game, (v2){-arena_half_size.x - 1.f + (i * 2.5f), arena_half_size.y + 2.5f}, (v2){1, 1}, 0xFFFFFFFF);
     }
+    draw_number(game, score, (v2){-arena_half_size.x + 15.f, arena_half_size.y + 2.5f}, 2.5f, 0xFFFFFFFF);
 
 #if DEVELOPMENT
     if pressed(BUTTON_LEFT) start_game(current_level - 1);
@@ -712,8 +717,6 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
-
-    draw_number(game, 684121654, (v2){0, 0}, 5.f, 0xFFFF00FF);
 }
 
 void set_slowmotion(b32 sl) {
