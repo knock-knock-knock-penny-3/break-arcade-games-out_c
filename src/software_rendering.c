@@ -41,6 +41,104 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
     SDL_RenderFillRect(game->renderer, &rect);
 }
 
+inline void draw_number(Game *game, int number, v2 p, f32 size, u32 color) {
+    int digit = number % 10;
+    b32 first_digit = true;
+
+    f32 square_size = size / 5.f;
+    f32 half_square_size = size / 10.f;
+
+    while (number || first_digit) {
+        first_digit = false;
+
+        switch(digit) {
+            case 0: {
+                draw_rect(game, (v2){p.x-square_size, p.y},     (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x+square_size, p.y},     (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x, p.y+square_size*2.f}, (v2){half_square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x, p.y-square_size*2.f}, (v2){half_square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 1: {
+                draw_rect(game, (v2){p.x+square_size, p.y},     (v2){half_square_size, 2.5f*square_size}, color);
+                p.x -= square_size*2.f;
+            } break;
+
+            case 2: {
+                draw_rect(game, (v2){p.x, p.y+square_size*2.f}, (v2){1.5f*square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x, p.y},                 (v2){1.5f*square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x, p.y-square_size*2.f}, (v2){1.5f*square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x+square_size, p.y+square_size}, (v2){half_square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x-square_size, p.y-square_size}, (v2){half_square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 3: {
+                draw_rect(game, (v2){p.x-half_square_size, p.y+square_size*2.f}, (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x-half_square_size, p.y},                 (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x-half_square_size, p.y-square_size*2.f}, (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x+square_size, p.y}, (v2){half_square_size, 2.5f*square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 4: {
+                draw_rect(game, (v2){p.x+square_size, p.y},             (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x-square_size, p.y+square_size}, (v2){half_square_size, 1.5f*square_size}, color);
+                draw_rect(game, (v2){p.x, p.y},                         (v2){half_square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 5: {
+                draw_rect(game, (v2){p.x, p.y+square_size*2.f}, (v2){1.5f*square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x, p.y},                 (v2){1.5f*square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x, p.y-square_size*2.f}, (v2){1.5f*square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x-square_size, p.y+square_size}, (v2){half_square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x+square_size, p.y-square_size}, (v2){half_square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 6: {
+                draw_rect(game, (v2){p.x+half_square_size, p.y+square_size*2.f}, (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x+half_square_size, p.y},                 (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x+half_square_size, p.y-square_size*2.f}, (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x-square_size, p.y}, (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x+square_size, p.y-square_size},          (v2){half_square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 7: {
+                draw_rect(game, (v2){p.x+square_size, p.y},             (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x-half_square_size, p.y+square_size*2.f}, (v2){square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 8: {
+                draw_rect(game, (v2){p.x-square_size, p.y},     (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x+square_size, p.y},     (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x, p.y+square_size*2.f}, (v2){half_square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x, p.y-square_size*2.f}, (v2){half_square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x, p.y},                         (v2){half_square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            case 9: {
+                draw_rect(game, (v2){p.x-half_square_size, p.y+square_size*2.f}, (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x-half_square_size, p.y},                 (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x-half_square_size, p.y-square_size*2.f}, (v2){square_size, half_square_size}, color);
+                draw_rect(game, (v2){p.x+square_size, p.y},                      (v2){half_square_size, 2.5f*square_size}, color);
+                draw_rect(game, (v2){p.x-square_size, p.y+square_size},          (v2){half_square_size, half_square_size}, color);
+                p.x -= square_size*4.f;
+            } break;
+
+            invalid_default_case;
+        }
+
+        number /= 10;
+        digit = number % 10;
+    }
+}
+
 v2 pixels_dp_to_world(Game *game, v2i pixels_coord) {
     f32 aspect_multiplier = calculate_aspect_multiplier(game);
 

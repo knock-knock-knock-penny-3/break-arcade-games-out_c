@@ -712,6 +712,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
+
+    draw_number(game, 684121654, (v2){0, 0}, 5.f, 0xFFFF00FF);
 }
 
 void set_slowmotion(b32 sl) {
