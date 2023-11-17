@@ -48,6 +48,7 @@ global_variable b32 running = true;
 
 typedef struct {
     v2i screen_size;
+    v2 screen_center;
     SDL_Renderer *renderer;
 } Game;
 

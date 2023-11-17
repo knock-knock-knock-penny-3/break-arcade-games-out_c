@@ -2,6 +2,7 @@
 #define BREAKOUT_SOFTWARE_RENDERING_H_INCLUDED
 
 // PROTOTYPES
+void set_screen(Game *, int, int);
 void clear_screen(Game *, u32);
 void draw_rect_in_pixels(Game *, int, int, int, int, u32);
 void draw_rect(Game *, v2, v2, u32);

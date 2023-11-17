@@ -15,6 +15,13 @@ RGBA color_converter(u32 hexValue) {
     return rgba;
 }
 
+void set_screen(Game *game, int width, int height) {
+    game->screen_size = (v2i){SCREEN_WIDTH, SCREEN_HEIGHT};
+    game->screen_center = mul_v2(v2i_to_v2(game->screen_size), .5f);
+
+    SDL_RenderSetLogicalSize(game->renderer, game->screen_size.x, game->screen_size.y);
+}
+
 void clear_screen(Game *game, u32 color) {
     RGBA rgba = color_converter(color);
 
@@ -159,8 +166,8 @@ v2 pixels_to_world(Game *game, v2i pixels_coord) {
     f32 aspect_multiplier = calculate_aspect_multiplier(game);
 
     v2 result;
-    result.x = (f32)pixels_coord.x - (game->screen_size.x * .5f);
-    result.y = (f32)pixels_coord.y - (game->screen_size.y * .5f);
+    result.x = (f32)pixels_coord.x - game->screen_center.x;
+    result.y = (f32)pixels_coord.y - game->screen_center.y;
 
     result.x /= aspect_multiplier;
     result.x /= scale;
@@ -191,8 +198,7 @@ void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
     p.x *= aspect_multiplier * scale;
     p.y *= aspect_multiplier * scale;
 
-    p.x += game->screen_size.x * .5f;
-    p.y += game->screen_size.y * .5f;
+    p = add_v2(p, game->screen_center);
 
     int x0 = (int)(p.x - half_size.x);
     int y0 = (int)(p.y - half_size.y);
@@ -211,8 +217,7 @@ void clear_screen_and_draw_rect(Game *game, v2 p, v2 half_size, u32 color, u32 c
     p.x *= aspect_multiplier * scale;
     p.y *= aspect_multiplier * scale;
 
-    p.x += game->screen_size.x * .5f;
-    p.y += game->screen_size.y * .5f;
+    p = add_v2(p, game->screen_center);
 
     int x0 = (int)(p.x - half_size.x);
     int y0 = (int)(p.y - half_size.y);

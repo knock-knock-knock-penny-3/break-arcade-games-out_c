@@ -27,8 +27,7 @@ int main() {
         SDL_DestroyWindow(window);
         SDL_Quit();
     }
-    game.screen_size = (v2i){SCREEN_WIDTH, SCREEN_HEIGHT};
-    SDL_RenderSetLogicalSize(game.renderer, game.screen_size.x, game.screen_size.y);
+    set_screen(&game, SCREEN_WIDTH, SCREEN_HEIGHT);
     SDL_SetRenderDrawBlendMode(game.renderer,SDL_BLENDMODE_BLEND);
 
     Input input = {0};
@@ -59,8 +58,7 @@ int main() {
 
                 case SDL_WINDOWEVENT: {
                     if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                        game.screen_size = (v2i){event.window.data1, event.window.data2};
-                        SDL_RenderSetLogicalSize(game.renderer, game.screen_size.x, game.screen_size.y);
+                        set_screen(&game, event.window.data1, event.window.data2);
                     }
                 } break;
 

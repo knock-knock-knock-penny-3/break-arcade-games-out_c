@@ -27,6 +27,14 @@ inline v2 div_v2(v2 a, f32 s) {
     return (v2){a.x / s, a.y / s};
 }
 
+inline v2i div_v2i(v2i a, int s) {
+    return (v2i){a.x / s, a.y / s};
+}
+
+inline v2 v2i_to_v2(v2i a) {
+    return (v2){(f32)a.x, (f32)a.y};
+}
+
 u32 make_color_from_grey(u8 grey) {
     return (grey << 0) | (grey << 8) | (grey << 16) | (0xFF << 24);
 }
