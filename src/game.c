@@ -10,6 +10,7 @@ v2 player_half_size;
 int player_life;
 
 int score;
+int touchless_bonus;
 
 Block blocks[1024];
 int num_blocks;
@@ -298,7 +299,7 @@ void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_of
 
 inline void test_for_win_condition() {
     blocks_destroyed++;
-    score += player_life;
+    score += player_life + touchless_bonus++;
 
     if (blocks_destroyed == num_blocks) {
         advance_level = true;
@@ -585,6 +586,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             ball->dp.x += clamp(-25, player_dp.x * .5f, 25);
             ball->desired_p.y = player_p.y + player_half_size.y;
             first_ball_movement = false;
+            touchless_bonus = 0;
 
             if (number_of_triple_shots) {
                 number_of_triple_shots--;
