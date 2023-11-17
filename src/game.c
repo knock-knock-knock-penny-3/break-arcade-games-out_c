@@ -16,7 +16,6 @@ Block blocks[1024];
 int num_blocks;
 int blocks_destroyed;
 
-v2 arena_half_size;
 b32 first_ball_movement = true;
 
 b32 initialized = false;
@@ -442,7 +441,7 @@ inline void start_game(Level level) {
     player_p.y = -40;
     player_half_size = (v2){10, 2};
 
-    arena_half_size = (v2){85, 45};
+//    arena_half_size = (v2){85, 45};
 
     reset_power();
 
@@ -559,13 +558,16 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         current_level = 0;
         start_game(current_level);
 
+        game->arena_half_size = (v2){85, 45};
+        game->arena_center = (v2){0, 0};
+
         power_block_half_size = (v2){2, 2};
     }
 
     v2 player_desired_p;
-//    if (inverted_controls_t <= 0) player_desired_p.x = pixels_to_world(game, input->mouse_p).x;
-//    else player_desired_p.x = -pixels_to_world(game, input->mouse_p).x;
-    player_desired_p.x = pixels_to_world(game, input->mouse_p).x;
+    if (inverted_controls_t <= 0) player_desired_p.x = player_p.x + pixels_to_world(game, input->mouse_dp).x;
+    else player_desired_p.x = player_p.x - pixels_to_world(game, input->mouse_dp).x;
+
     player_desired_p.y = player_p.y;
 
     // Update balls
@@ -592,19 +594,19 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 number_of_triple_shots--;
                 spawn_triple_shot_balls();
             }
-        } else if (ball->desired_p.x + ball->half_size.x > arena_half_size.x) {
+        } else if (ball->desired_p.x + ball->half_size.x > game->arena_half_size.x) {
             // Ball collision with left border
-            ball->desired_p.x = arena_half_size.x - ball->half_size.x;
+            ball->desired_p.x = game->arena_half_size.x - ball->half_size.x;
             ball->dp.x *= -1;
-        } else if (ball->desired_p.x - ball->half_size.x < -arena_half_size.x) {
+        } else if (ball->desired_p.x - ball->half_size.x < -game->arena_half_size.x) {
             // Ball collision with right border
-            ball->desired_p.x = -arena_half_size.x + ball->half_size.x;
+            ball->desired_p.x = -game->arena_half_size.x + ball->half_size.x;
             ball->dp.x *= -1;
         }
 
-        if (ball->desired_p.y + ball->half_size.y > arena_half_size.y) {
+        if (ball->desired_p.y + ball->half_size.y > game->arena_half_size.y) {
             // Ball collision with top border
-            ball->desired_p.y = arena_half_size.y - ball->half_size.y;
+            ball->desired_p.y = game->arena_half_size.y - ball->half_size.y;
             reset_and_reverse_ball_dp_y(ball);
             process_ball_when_dp_y_down(ball);
         }
@@ -620,7 +622,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     simulate_level(game, current_level, dt);
 
-    clear_screen_and_draw_rect(game, (v2){0, 0}, arena_half_size, 0xFF551100, 0xFF220500);
+    clear_screen_and_draw_rect(game, game->arena_center, game->arena_half_size, 0xFF551100, 0xFF220500);
 
     for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) continue;
@@ -708,9 +710,9 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if (advance_level) start_game(current_level + 1);
 
     for (int i = 0; i < player_life; i++) {
-        draw_rect(game, (v2){-arena_half_size.x - 1.f + (i * 2.5f), arena_half_size.y + 2.5f}, (v2){1, 1}, 0xFFFFFFFF);
+        draw_rect(game, (v2){-game->arena_half_size.x - 1.f + (i * 2.5f), game->arena_half_size.y + 2.5f}, (v2){1, 1}, 0xFFFFFFFF);
     }
-    draw_number(game, score, (v2){-arena_half_size.x + 15.f, arena_half_size.y + 2.5f}, 2.5f, 0xFFFFFFFF);
+    draw_number(game, score, (v2){-game->arena_half_size.x + 15.f, game->arena_half_size.y + 2.5f}, 2.5f, 0xFFFFFFFF);
 
 #if DEVELOPMENT
     if pressed(BUTTON_LEFT) start_game(current_level - 1);
