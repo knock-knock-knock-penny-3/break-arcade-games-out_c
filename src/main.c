@@ -33,9 +33,9 @@ int main() {
     v2i mouse_pointer = {0};
     Input input = {0};
 
-//    SDL_ShowCursor(SDL_DISABLE);
-//    SDL_WarpMouseInWindow(window, game.screen_center.x, game.screen_center.y);
-    SDL_GetMouseState(&input.mouse_p.x,&input.mouse_p.y);
+    SDL_ShowCursor(SDL_DISABLE);
+    SDL_WarpMouseInWindow(window, game.screen_center.x, game.screen_center.y);
+    input.mouse_p = (v2i){game.screen_center.x, game.screen_center.y};
 
     u32 last_counter = SDL_GetPerformanceCounter();
     f64 last_dt = 0.01666f;  // 60 FPS
@@ -99,17 +99,16 @@ input.buttons[b].is_down = state[vk];
         SDL_GetMouseState(&mouse_pointer.x,&mouse_pointer.y);
         mouse_pointer.y = game.screen_size.y - mouse_pointer.y;
 
-        input.mouse_dp = sub_v2i(mouse_pointer, input.mouse_p);
+        input.mouse_dp.x = input.mouse_p.x;
+        input.mouse_dp.y = mouse_pointer.y;
 
-        SDL_Log("%d - %d", SDL_GetWindowFlags(window) & SDL_WINDOW_MOUSE_FOCUS, SDL_GetWindowFlags(window) & SDL_WINDOW_MOUSE_CAPTURE);
-//        if (SDL_GetWindowFlags(window) & SDL_WINDOW_MOUSE_FOCUS) {
-//            SDL_WarpMouseInWindow(window, game.screen_center.x, game.screen_center.y);
-//        }
+        if (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) {
+            SDL_WarpMouseInWindow(window, game.screen_center.x, game.screen_center.y);
+        }
         input.mouse_p = mouse_pointer;
 
         // Simulation
         simulate_game(&game, &input, last_dt);
-        draw_number(&game, mouse_pointer.x, (v2){-game.arena_half_size.x + 50.f, game.arena_half_size.y + 2.5f}, 2.5f, 0xFFFFFFFF);
 
         // Render
         SDL_RenderPresent(game.renderer);

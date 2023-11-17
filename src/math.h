@@ -4,6 +4,7 @@
 // PROTOTYPES
 int clamp(int, int, int);
 extern v2 add_v2(v2, v2);
+extern v2i add_v2i(v2i, v2i);
 extern v2 sub_v2(v2, v2);
 extern v2i sub_v2i(v2i, v2i);
 extern v2 mul_v2(v2, f32);
