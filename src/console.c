@@ -1,0 +1,29 @@
+#include "main.h"
+#include "console.h"
+
+#if DEVELOPMENT
+Message messages[32];
+int current_message;
+
+void print_int(int number, u32 color) {
+    Message *message = messages + current_message++;
+    if (current_message >= array_count(messages)) current_message = 0;
+
+    message->val = number;
+    message->color = color;
+}
+
+void draw_messages(Game *game) {
+    v2 p = mul_v2(game->arena_half_size, -1.f);
+
+    for (int i = 0; i < array_count(messages); i++) {
+        Message *message = messages + i;
+
+        draw_number(game, message->val, p, 2.5f, message->color);
+        p.y += 3.5f;
+    }
+}
+#else
+#define draw_messages(...)
+#define print_int(...)
+#endif // DEVELOPMENT

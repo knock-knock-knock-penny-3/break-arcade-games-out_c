@@ -8,6 +8,7 @@
 #include "platform_common.h"
 #include "game.h"
 #include "collision.h"
+#include "console.h"
 
 #if DEVELOPMENT
 #define WINDOW_TITLE    "Breakout - DEVELOPMENT"
