@@ -2,7 +2,7 @@
 #include "console.h"
 
 #if DEVELOPMENT
-Message messages[32];
+Message messages[16];
 int current_message;
 
 void print_int(int number, u32 color) {
@@ -14,13 +14,13 @@ void print_int(int number, u32 color) {
 }
 
 void draw_messages(Game *game) {
-    v2 p = mul_v2(game->arena_half_size, -1.f);
+    v2 p = (v2){game->arena_half_size.x, -game->arena_half_size.y};
 
     for (int i = 0; i < array_count(messages); i++) {
         Message *message = messages + i;
 
-        draw_number(game, message->val, p, 2.5f, message->color);
-        p.y += 3.5f;
+        draw_number(game, message->val, p, 2.f, message->color);
+        p.y += 3.f;
     }
 }
 #else

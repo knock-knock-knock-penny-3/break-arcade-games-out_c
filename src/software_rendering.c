@@ -49,13 +49,15 @@ void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) 
 }
 
 inline void draw_number(Game *game, int number, v2 p, f32 size, u32 color) {
-    int digit = number % 10;
+    b32 positive = number >= 0;
+    u32 num = abs(number);
+    int digit = num % 10;
     b32 first_digit = true;
 
     f32 square_size = size / 5.f;
     f32 half_square_size = size / 10.f;
 
-    while (number || first_digit) {
+    while (num || first_digit) {
         first_digit = false;
 
         switch(digit) {
@@ -141,8 +143,11 @@ inline void draw_number(Game *game, int number, v2 p, f32 size, u32 color) {
             invalid_default_case;
         }
 
-        number /= 10;
-        digit = number % 10;
+        num /= 10;
+        digit = num % 10;
+    }
+    if (!positive) {
+        draw_rect(game, (v2){p.x, p.y},                 (v2){1.5f*square_size, half_square_size}, color);
     }
 }
 

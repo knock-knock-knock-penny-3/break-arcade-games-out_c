@@ -574,6 +574,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     for_each_ball {
         if (!(ball->flags & BALL_ACTIVE)) continue;
         ball->desired_p = add_v2(ball->p, mul_v2(ball->dp, dt));
+        print_int((int)100.f * ball->dp.y, 0xFFFFFF00);
 
     #if DEVELOPMENT
         if (slowmotion) {
