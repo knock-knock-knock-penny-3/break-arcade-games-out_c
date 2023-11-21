@@ -23,11 +23,12 @@ b32 initialized = false;
 Power_Block power_blocks[16];
 int next_power_block;
 v2 power_block_half_size;
-f32 invincibility_t; // in seconds
-f32 comet_t; // in seconds
+f32 invincibility_t;        // in seconds
+f32 comet_t;                // in seconds
 int number_of_triple_shots;
-f32 strong_blocks_t; // in seconds
-f32 inverted_controls_t; // in seconds
+f32 strong_blocks_t;        // in seconds
+f32 inverted_controls_t;    // in seconds
+f32 slow_player_t;          // in seconds
 
 Level_State level_state;
 
@@ -38,21 +39,25 @@ f32 dt_multiplier = 1.f;
 b32 advance_level = false;
 #endif
 
+internal int random_powerup() {
+    return random_int_in_range(1, POWERUP_LAST);
+}
+
+internal int random_powerdown() {
+    return random_int_in_range(POWERUP_LAST + 1, POWER_COUNT - 1);
+}
+
 internal void reset_and_reverse_ball_dp_y(Ball *ball) {
     if (ball->dp.y > 0) ball->dp.y = -ball->base_speed * ball->speed_multiplier;
     else ball->dp.y = ball->base_speed * ball->speed_multiplier;
 }
 
-internal f32 calculate_speed_adjustment(Ball *to_adjust, Ball *ref) {
-    f32 distance_a_to_player = to_adjust->p.y - player_p.y;
-    f32 time_a_to_player = distance_a_to_player / to_adjust->dp.y;
+internal f32 calculate_speed_adjustment(Ball *ball) {
+    f32 time_to_player = 2.f;
+    f32 dist_to_player = ball->p.y - player_p.y;
+    f32 result = (dist_to_player / time_to_player) / ball->base_speed;
 
-    f32 distance_b_to_player = ref->p.y - player_p.y;
-    f32 time_b_to_player = distance_b_to_player / ref->dp.y;
-
-    f32 diff = time_a_to_player - time_b_to_player;
-
-    return clamp(0, diff, 1) * .5f + .5f;
+    return result;
 }
 
 internal void process_ball_when_dp_y_down(Ball *ball) {
@@ -60,16 +65,10 @@ internal void process_ball_when_dp_y_down(Ball *ball) {
         ball->flags &= ~BALL_ACTIVE;
     }
 
-    // If we're supposed to adjust dp and the other ball is going down
-    if (ball->flags & BALL_ADJUST_SPEED_BASED_ON_0) {
+    // If we're supposed to be a fixed speed ball, calculate and set the dp
+    if (ball->flags & BALL_FIXED_SPEED) {
         if (balls[0].dp.y < 0) {
-            ball->dp.y *= calculate_speed_adjustment(ball, balls);
-        }
-    }
-
-    if (ball->flags & BALL_ADJUST_SPEED_BASED_ON_1) {
-        if (balls[1].dp.y < 0) {
-            ball->dp.y *= calculate_speed_adjustment(ball, balls+1);
+            ball->dp.y *= calculate_speed_adjustment(ball);
         }
     }
 }
@@ -187,8 +186,6 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
                 ball->dp.x *= -1;
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
 
-                reset_and_reverse_ball_dp_y(ball);
-
                 if (strong_blocks_t <= 0) {
                     block->life--;
                     if (!block->life) block_destroyed(block);
@@ -229,7 +226,7 @@ internal void create_invader(v2 p) {
                 block->ball_speed_multiplier = 1 + (f32)(array_count(invader) - i) * .5f / array_count(invader);
 
                 if (random_choice(20)) {
-                    block->power_block = random_int_in_range(1, POWERUP_LAST);
+                    block->power_block = random_powerup();
                 }
             }
 
@@ -288,10 +285,6 @@ void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_of
                 block->flags |= BLOCK_RIVAL_B;
                 block->color = RIVAL_B_COLOR;
             }
-
-//            if (y == 0) {
-//                block->power_block = POWER_INVERTED_CONTROLS;
-//            }
         }
     }
 }
@@ -362,7 +355,7 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
     }
 }
 
-internal void simulate_block_for_level(Block *block, Level level) {
+internal void simulate_block_for_level(Game *game, Block *block, Level level) {
     switch (level) {
         case L05_PONG: {
             block->p = add_v2(block->relative_p, level_state.pong.enemy_p);
@@ -372,7 +365,7 @@ internal void simulate_block_for_level(Block *block, Level level) {
             block->p = add_v2(block->relative_p, level_state.invaders.enemy_p);
             if (level_state.invaders.do_invader_player_collision_test) {
                 if (block->p.y - block->half_size.y < player_p.y + player_half_size.y) {
-                    lose_life();
+                    lose_life(game);
                 }
             }
         } break;
@@ -383,10 +376,10 @@ internal void simulate_block_for_level(Block *block, Level level) {
     }
 }
 
-inline void lose_life() {
+inline void lose_life(Game *game) {
     player_life--;
     if (!player_life) {
-        start_game(current_level);
+        start_game(game, current_level);
         return;
     }
 
@@ -405,6 +398,7 @@ inline void reset_power() {
     number_of_triple_shots = 0;
     strong_blocks_t = 0.f;
     inverted_controls_t = 0.f;
+    slow_player_t = 0.f;
 }
 
 inline void init_ball(Ball *ball) {
@@ -420,7 +414,7 @@ inline void init_ball(Ball *ball) {
     ball->collision_test_p = ball->p;
 }
 
-inline void start_game(Level level) {
+inline void start_game(Game *game, Level level) {
     advance_level = false;
 
     if (level >= L_COUNT) level = 0;
@@ -441,8 +435,6 @@ inline void start_game(Level level) {
     player_p.y = -40;
     player_half_size = (v2){10, 2};
 
-//    arena_half_size = (v2){85, 45};
-
     reset_power();
 
     num_blocks = 0;
@@ -453,7 +445,7 @@ inline void start_game(Level level) {
 
     switch (level) {
         case L01_NORMAL: {
-            create_block_block(19, 9, (v2){.1f, .1f}, 0.f, 0.f, (v2){4.f, 2.f}, 1.f, 0);
+            create_block_block(16, 7, (v2){.1f, .1f}, 0.f, 0.f, (v2){4.8f, 2.4f}, 1.f, 0);
         } break;
 
         case L02_WALL: {
@@ -480,11 +472,10 @@ inline void start_game(Level level) {
                     block->color = make_color(k/2, k, 128);
                     block->ball_speed_multiplier = 1+ (f32)y*1.25f/(f32)num_y;
 
-                    if (y == 0 || y == 2) {
-                        if (x % 6 == 0) block->power_block = power_block++;
-                        if (power_block > POWERUP_LAST) power_block = 1;
-                    } else if (y == 6 || y == 7) {
-                        if (x % 5 == 0) block->power_block = power_block++;
+                    if (y <= 2) {
+                        if (random_choice(5)) block->power_block = random_powerup();
+                    } else if (y >= 6) {
+                        if (random_choice(5)) block->power_block = random_powerdown();
                     }
                 }
 
@@ -497,9 +488,13 @@ inline void start_game(Level level) {
 
             init_ball(balls + 1);
 
+            f32 middle_point_y = (game->arena_half_size.y + (player_p.y + player_half_size.y)) * .5f;
+            balls[0].p.y = middle_point_y;
+            balls[1].p.y = middle_point_y;
+
             balls[1].dp.y = balls[0].base_speed;
-            balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
-            balls[0].flags |= BALL_RIVAL_A | BALL_ADJUST_SPEED_BASED_ON_1; //@Hack
+            balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_FIXED_SPEED;
+            balls[0].flags |= BALL_RIVAL_A | BALL_FIXED_SPEED;
         } break;
 
         case L04_CHESS: {
@@ -511,8 +506,8 @@ inline void start_game(Level level) {
             init_ball(balls + 1);
 
             balls[1].dp.y = balls[0].base_speed;
-            balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_ADJUST_SPEED_BASED_ON_0; //@Hack
-            balls[0].flags |= BALL_RIVAL_A | BALL_ADJUST_SPEED_BASED_ON_1; //@Hack
+            balls[1].flags |= BALL_ACTIVE | BALL_RIVAL_B | BALL_FIXED_SPEED;
+            balls[0].flags |= BALL_RIVAL_A | BALL_FIXED_SPEED;
         } break;
 
         case L05_PONG: {
@@ -523,7 +518,7 @@ inline void start_game(Level level) {
                 if (!block->life) continue;
 
                 if (random_choice(3)) {
-                    block->power_block = random_int_in_range(POWERUP_LAST + 1, POWER_COUNT - 1);
+                    block->power_block = random_powerdown();
                 }
             }
 
@@ -556,7 +551,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if (!initialized) {
         initialized = true;
         current_level = 0;
-        start_game(current_level);
+        start_game(game, current_level);
 
         game->arena_half_size = (v2){85, 45};
         game->arena_center = (v2){0, 0};
@@ -564,9 +559,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         power_block_half_size = (v2){2, 2};
     }
 
+    f32 speed_multiplier = 1.f;
+    if (slow_player_t > 0) {
+        speed_multiplier = .1f;
+    }
+
     v2 player_desired_p;
-    if (inverted_controls_t <= 0) player_desired_p.x = player_p.x + pixels_to_world(game, input->mouse_dp).x;
-    else player_desired_p.x = player_p.x - pixels_to_world(game, input->mouse_dp).x;
+    if (inverted_controls_t <= 0) player_desired_p.x = player_p.x + speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+    else player_desired_p.x = player_p.x - speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
 
     player_desired_p.y = player_p.y;
 
@@ -613,7 +613,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         if (ball->desired_p.y - ball->half_size.y < -50) {
             // Ball falling down
-            if (invincibility_t <= 0) lose_life();    // LOST
+            if (invincibility_t <= 0) lose_life(game);    // LOST
             else reset_and_reverse_ball_dp_y(ball);                 // INVINCIBILITY
         }
 
@@ -627,7 +627,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) continue;
 
-        simulate_block_for_level(block, current_level);
+        simulate_block_for_level(game, block, current_level);
 
         if (!first_ball_movement) {
             for_each_ball {
@@ -659,7 +659,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 } break;
 
                 case POWER_INSTAKILL: {
-                    lose_life();
+                    lose_life(game);
                 } break;
 
                 case POWER_STRONG_BLOCKS: {
@@ -667,11 +667,11 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 } break;
 
                 case POWER_INVERTED_CONTROLS: {
-                    inverted_controls_t+= 5.f;
+                    inverted_controls_t += 5.f;
                 } break;
 
                 case POWER_SLOW_PLAYER: {
-
+                    slow_player_t += 5.f;
                 } break;
 
                 invalid_default_case;
@@ -705,9 +705,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     if (comet_t > 0) comet_t -= dt;
     if (strong_blocks_t > 0) strong_blocks_t -= dt;
-    if (inverted_controls_t > 0) inverted_controls_t += dt;
+    if (inverted_controls_t > 0) inverted_controls_t -= dt;
+    if (slow_player_t > 0) slow_player_t -= dt;
 
-    if (advance_level) start_game(current_level + 1);
+    if (advance_level) start_game(game, current_level + 1);
 
     for (int i = 0; i < player_life; i++) {
         draw_rect(game, (v2){-game->arena_half_size.x - 1.f + (i * 2.5f), game->arena_half_size.y + 2.5f}, (v2){1, 1}, 0xFFFFFFFF);
@@ -715,8 +716,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     draw_number(game, score, (v2){-game->arena_half_size.x + 15.f, game->arena_half_size.y + 2.5f}, 2.5f, 0xFFFFFFFF);
 
 #if DEVELOPMENT
-    if pressed(BUTTON_LEFT) start_game(current_level - 1);
-    if pressed(BUTTON_RIGHT) start_game(current_level + 1);
+    if pressed(BUTTON_LEFT) start_game(game, current_level - 1);
+    if pressed(BUTTON_RIGHT) start_game(game, current_level + 1);
     if is_down(BUTTON_UP) invincibility_t = max(1.f, invincibility_t + dt);
     if pressed(BUTTON_DOWN) dt_multiplier = 10.f;
     if released(BUTTON_DOWN) dt_multiplier = 1.f;

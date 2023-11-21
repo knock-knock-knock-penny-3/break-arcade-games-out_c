@@ -6,8 +6,7 @@
 #define BALL_RIVAL_A                0x4
 #define BALL_RIVAL_B                0x8
 
-#define BALL_ADJUST_SPEED_BASED_ON_0    0x10
-#define BALL_ADJUST_SPEED_BASED_ON_1    0x20
+#define BALL_FIXED_SPEED 0x10
 
 #define for_each_ball for (Ball *ball = balls; ball != balls + array_count(balls); ball++)
 
@@ -109,7 +108,7 @@ typedef struct {
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);
 void set_slowmotion(b32);
-extern void start_game(Level);
+extern void start_game(Game *, Level);
 extern void test_for_win_condition();
 
 #endif // BREAKOUT_GAME_H_INCLUDED

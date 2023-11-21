@@ -69,7 +69,7 @@ int main() {
                 case SDL_KEYDOWN: {
                     switch (event.key.keysym.sym) {
                         case SDLK_r: {
-                            start_game(0);
+                            start_game(&game, 0);
                         } break;
 
                         case SDLK_ESCAPE: {
