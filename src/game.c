@@ -574,7 +574,6 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     for_each_ball {
         if (!(ball->flags & BALL_ACTIVE)) continue;
         ball->desired_p = add_v2(ball->p, mul_v2(ball->dp, dt));
-        print_int((int)100.f * ball->dp.y, 0xFFFFFF00);
 
     #if DEVELOPMENT
         if (slowmotion) {
@@ -724,7 +723,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
 
-    draw_messages(game);
+    draw_messages(game, dt);
 }
 
 void set_slowmotion(b32 sl) {

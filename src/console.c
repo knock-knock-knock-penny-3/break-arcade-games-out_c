@@ -11,16 +11,20 @@ void print_int(int number, u32 color) {
 
     message->val = number;
     message->color = color;
+    message->timer = 2.f;
 }
 
-void draw_messages(Game *game) {
+void draw_messages(Game *game, f32 dt) {
     v2 p = (v2){game->arena_half_size.x, -game->arena_half_size.y};
 
     for (int i = 0; i < array_count(messages); i++) {
         Message *message = messages + i;
 
-        draw_number(game, message->val, p, 2.f, message->color);
-        p.y += 3.f;
+        if (message->timer > 0) {
+            message->timer -= dt;
+            draw_number(game, message->val, p, 2.f, message->color);
+            p.y += 3.f;
+        }
     }
 }
 #else
