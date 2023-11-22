@@ -483,7 +483,7 @@ inline void start_game(Game *game, Level level) {
                     if (y <= 2) {
                         if (random_choice(5)) block->power_block = random_powerup();
                     } else if (y >= 6) {
-                        if (random_choice(5)) block->power_block = random_powerdown();
+                        if (random_choice(6)) block->power_block = random_powerdown();
                     }
                 }
 
