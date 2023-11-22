@@ -260,8 +260,8 @@ internal void calculate_all_neighbours() {
     }
 }
 
-void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_offset, v2 block_half_size, f32 base_speed_multiplier, int rivalry) {
-    x_offset += (f32)num_x * block_half_size.x * (2.f + (spacing.x * 2.f)) * .5f - block_half_size.x * (1.f + spacing.x);
+void create_block_block(int num_x, int num_y, v2 relative_spacing, f32 x_offset, f32 y_offset, v2 block_half_size, f32 base_speed_multiplier, int rivalry) {
+    x_offset += (f32)num_x * block_half_size.x * (2.f + (relative_spacing.x * 2.f)) * .5f - block_half_size.x * (1.f + relative_spacing.x);
     y_offset += -2.f;
 
     for (int y = 0; y < num_y; y++) {
@@ -271,8 +271,8 @@ void create_block_block(int num_x, int num_y, v2 spacing, f32 x_offset, f32 y_of
             block->life = 1;
             block->half_size = block_half_size;
 
-            block->relative_p.x = x * block->half_size.x * (2.f + spacing.x * 2.f) - x_offset;
-            block->relative_p.y = y * block->half_size.y * (2.f + spacing.y * 2.f) - y_offset;
+            block->relative_p.x = x * block->half_size.x * (2.f + relative_spacing.x * 2.f) - x_offset;
+            block->relative_p.y = y * block->half_size.y * (2.f + relative_spacing.y * 2.f) - y_offset;
 
             u8 k = y * 255 / num_y;
             block->color = make_color(255, k, 128);
@@ -313,11 +313,11 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
                                 mul_v2(ddp, square(dt))
                             );
 
-            if (desired_p.x > game->screen_size.x - pong->enemy_half_size.x) {
-                desired_p.x = game->screen_size.x - pong->enemy_half_size.x;
+            if (desired_p.x > game->arena_half_size.x - pong->enemy_half_size.x) {
+                desired_p.x = game->arena_half_size.x - pong->enemy_half_size.x;
                 desired_dp = mul_v2(desired_dp, -.5f);
-            } else if (desired_p.x < -game->screen_size.x + pong->enemy_half_size.x) {
-                desired_p.x = -game->screen_size.x + pong->enemy_half_size.x;
+            } else if (desired_p.x < -game->arena_half_size.x + pong->enemy_half_size.x) {
+                desired_p.x = -game->arena_half_size.x + pong->enemy_half_size.x;
                 desired_dp = mul_v2(desired_dp, -.5f);
             }
 
@@ -519,8 +519,13 @@ inline void start_game(Game *game, Level level) {
         } break;
 
         case L05_PONG: {
-            create_block_block(12, 3, (v2){.05f, .05f}, 0.f, -30.f, (v2){1.5f, 1.5f}, 2.f, 0);
-            level_state.pong.enemy_half_size.x = 8 * (2.f + .05f);
+            strong_blocks_t += 5000.f;
+
+            int num_x = 12;
+            int num_y = 3;
+            v2 block_half_size = {1.5f, 1.5f};
+            create_block_block(num_x, num_y, (v2){.05f, .05f}, 0.f, -30.f, block_half_size, 2.f, 0);
+            level_state.pong.enemy_half_size.x = num_x * (block_half_size.x * 1.05f);
 
             for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
                 if (!block->life) continue;

@@ -19,12 +19,13 @@
 typedef enum {
     L01_NORMAL,
     L02_WALL,
-    L03_STADIUM,
-    L04_CHESS,
     L05_PONG,
     L06_INVADERS,
 
     L_COUNT,
+
+    L03_STADIUM,
+    L04_CHESS,
 
     L_NEG = -1, //@HACK TO HAVE NEGATIVE VALUES (https://stackoverflow.com/a/38010712)
 } Level;
