@@ -36,6 +36,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/collision.h" />
+		<Unit filename="src/console.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/console.h" />
 		<Unit filename="src/game.c">
 			<Option compilerVar="CC" />
 		</Unit>

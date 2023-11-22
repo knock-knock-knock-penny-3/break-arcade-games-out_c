@@ -464,11 +464,19 @@ inline void start_game(Game *game, Level level) {
                     block->life = 1;
                     block->half_size = (v2){block_x_half_size, 2};
 
-                    if (y % 2) block->relative_p.x = x*block->half_size.x*2.0f - x_offset;
-                    else block->relative_p.x = x*block->half_size.x*2.0f - x_offset + block->half_size.x;
+                    block->relative_p.x = x*block->half_size.x*2.0f - x_offset;
+                    if (y % 2) {
+                        if (x == 0) {
+                            block->half_size.x *= .5f;
+                            block->relative_p.x += block->half_size.x;
+                        }
+                    } else {
+                        if (x == num_x - 1) block->half_size.x *= .5f;
+                        block->relative_p.x += block->half_size.x;
+                    }
                     block->relative_p.y = y*block->half_size.y*2.0f - y_offset;
 
-                    u8 k = y * 255 / num_y;
+                    u8 k = (u8)(y * 255 / num_y);
                     block->color = make_color(k/2, k, 128);
                     block->ball_speed_multiplier = 1+ (f32)y*1.25f/(f32)num_y;
 
@@ -585,7 +593,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             // Ball collision with player
             reset_and_reverse_ball_dp_y(ball);
             ball->dp.x = (ball->p.x - player_p.x) * 7.5f;
-            ball->dp.x += clamp(-25, player_dp.x * .5f, 25);
+            ball->dp.x += clampf(-25.f, player_dp.x * .5f, 25.f);
             ball->desired_p.y = player_p.y + player_half_size.y;
             first_ball_movement = false;
             touchless_bonus = 0;

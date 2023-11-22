@@ -7,6 +7,12 @@ int clamp(int min, int val, int max) {
     return val;
 }
 
+f32 clampf(f32 min, f32 val, f32 max) {
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
+
 inline v2 add_v2(v2 a, v2 b) {
     return (v2){a.x + b.x, a.y + b.y};
 }

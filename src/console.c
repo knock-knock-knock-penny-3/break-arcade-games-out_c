@@ -20,11 +20,11 @@ void draw_messages(Game *game, f32 dt) {
     for (int i = 0; i < array_count(messages); i++) {
         Message *message = messages + i;
 
-        if (message->timer > 0) {
-            message->timer -= dt;
-            draw_number(game, message->val, p, 2.f, message->color);
-            p.y += 3.f;
-        }
+        if (message->timer <= 0) continue;
+
+        message->timer -= dt;
+        draw_number(game, message->val, p, 2.f, message->color);
+        p.y += 3.f;
     }
 }
 #else
