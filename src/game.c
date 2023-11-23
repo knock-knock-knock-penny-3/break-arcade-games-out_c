@@ -9,6 +9,9 @@ v2 player_dp;
 v2 player_half_size;
 int player_life;
 
+v2 player_visual_p;
+v2 player_visual_dp;
+
 int score;
 int touchless_bonus;
 
@@ -572,16 +575,28 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         power_block_half_size = (v2){2, 2};
     }
 
-    f32 speed_multiplier = 1.f;
-    if (slow_player_t > 0) {
-        speed_multiplier = .1f;
-    }
-
+    // player movement
     v2 player_desired_p;
-    if (inverted_controls_t <= 0) player_desired_p.x = player_p.x + speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
-    else player_desired_p.x = player_p.x - speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+    {
+        f32 speed_multiplier = 1.f;
+        if (slow_player_t > 0) speed_multiplier = .1f;
 
-    player_desired_p.y = player_p.y;
+        if (inverted_controls_t <= 0)
+            player_desired_p.x = player_p.x + speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+        else
+            player_desired_p.x = player_p.x - speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+
+        player_desired_p.y = player_p.y;
+        player_visual_p.y = player_desired_p.y;
+
+        v2 player_visual_ddp = {0};
+        player_visual_ddp.x = 10.f * (player_desired_p.x - player_visual_p.x) + 40.f * (0 - player_visual_dp.x);
+        player_visual_dp = add_v2(player_visual_dp, mul_v2(player_visual_ddp, dt));
+        player_visual_p = add_v2(player_visual_p, add_v2(
+            player_visual_dp,
+            mul_v2(player_visual_ddp, square(dt) * .5f)
+        ));
+    }
 
     // Update balls
     for_each_ball {
@@ -715,6 +730,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
         else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
     }
+
+    draw_rect(game, add_v2(player_visual_p, (v2){0, 10}), player_half_size, 0xFF0000FF);
 
     if (comet_t > 0) comet_t -= dt;
     if (strong_blocks_t > 0) strong_blocks_t -= dt;
