@@ -4,8 +4,8 @@
 Ball balls[16];
 int next_ball;
 
-v2 player_p;
-v2 player_dp;
+v2 player_target_p;
+v2 player_target_dp;
 v2 player_half_size;
 int player_life;
 
@@ -57,7 +57,7 @@ internal void reset_and_reverse_ball_dp_y(Ball *ball) {
 
 internal f32 calculate_speed_adjustment(Ball *ball) {
     f32 time_to_player = 2.f;
-    f32 dist_to_player = ball->p.y - player_p.y;
+    f32 dist_to_player = ball->p.y - player_visual_p.y;
     f32 result = (dist_to_player / time_to_player) / ball->base_speed;
 
     return result;
@@ -104,8 +104,8 @@ internal void spawn_triple_shot_balls() {
         ball->base_speed = 75;
 //        ball->p.x = balls[0].p.x; // Better solution?
 //        ball->p.y = balls[0].p.y; // New balls spawns from main ball
-        ball->p.x = player_p.x;
-        ball->p.y = player_p.y + player_half_size.y;
+        ball->p.x = player_visual_p.x;
+        ball->p.y = player_visual_p.y + player_half_size.y;
         ball->dp.x = 45.f * (f32)(-1 * i%2);
         ball->dp.y = ball->base_speed;
         ball->half_size = (v2){.75, .75};
@@ -367,7 +367,7 @@ internal void simulate_block_for_level(Game *game, Block *block, Level level) {
         case L06_INVADERS: {
             block->p = add_v2(block->relative_p, level_state.invaders.enemy_p);
             if (level_state.invaders.do_invader_player_collision_test) {
-                if (block->p.y - block->half_size.y < player_p.y + player_half_size.y) {
+                if (block->p.y - block->half_size.y < player_target_p.y + player_half_size.y) {
                     lose_life(game);
                 }
             }
@@ -435,7 +435,7 @@ inline void start_game(Game *game, Level level) {
     first_ball_movement = true;
     init_ball(balls);
 
-    player_p.y = -40;
+    player_target_p.y = -40;
     player_half_size = (v2){10, 2};
 
     reset_power();
@@ -499,7 +499,7 @@ inline void start_game(Game *game, Level level) {
 
             init_ball(balls + 1);
 
-            f32 middle_point_y = (game->arena_half_size.y + (player_p.y + player_half_size.y)) * .5f;
+            f32 middle_point_y = (game->arena_half_size.y + (player_target_p.y + player_half_size.y)) * .5f;
             balls[0].p.y = middle_point_y;
             balls[1].p.y = middle_point_y;
 
@@ -582,13 +582,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         if (slow_player_t > 0) speed_multiplier = .1f;
 
         if (inverted_controls_t <= 0)
-            player_desired_p.x = player_p.x + speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+            player_desired_p.x = player_target_p.x + speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
         else
-            player_desired_p.x = player_p.x - speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+            player_desired_p.x = player_target_p.x - speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
 
-        player_desired_p.y = player_p.y;
-        player_visual_p.y = player_desired_p.y;
+        player_desired_p.y = player_target_p.y;
+        player_visual_p.y = player_target_p.y;
 
+        // Spring effect
         v2 player_visual_ddp = {0};
         player_visual_ddp.x = 10.f * (player_desired_p.x - player_visual_p.x) + 40.f * (0 - player_visual_dp.x);
         player_visual_dp = add_v2(player_visual_dp, mul_v2(player_visual_ddp, dt));
@@ -597,8 +598,9 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             mul_v2(player_visual_ddp, square(dt) * .5f)
         ));
 
-        player_half_size.x = 10.f + absf(player_dp.x * .01f);
-        player_half_size.y = 2.f - absf(player_dp.x * .0005f);
+        // Deform effect
+        player_half_size.x = 10.f + absf(player_target_dp.x * .01f);
+        player_half_size.y = 2.f - absf(player_target_dp.x * .0005f);
     }
 
     // Update balls
@@ -612,12 +614,12 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
     #endif
 
-        if (ball->dp.y < 0 && is_colliding(player_p, player_half_size, ball->desired_p, ball->half_size)) {
+        if (ball->dp.y < 0 && is_colliding(player_visual_p, player_half_size, ball->desired_p, ball->half_size)) {
             // Ball collision with player
             reset_and_reverse_ball_dp_y(ball);
-            ball->dp.x = (ball->p.x - player_p.x) * 7.5f;
-            ball->dp.x += clampf(-25.f, player_dp.x * .5f, 25.f);
-            ball->desired_p.y = player_p.y + player_half_size.y;
+            ball->dp.x = (ball->p.x - player_visual_p.x) * 7.5f;
+            ball->dp.x += clampf(-25.f, player_target_dp.x * .5f, 25.f);
+            ball->desired_p.y = player_visual_p.y + player_half_size.y;
             first_ball_movement = false;
             touchless_bonus = 0;
 
@@ -675,7 +677,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         power_block->p.y -= 15 * dt;
 
-        if (is_colliding(player_p, player_half_size, power_block->p, power_block_half_size)) {
+        if (is_colliding(player_visual_p, player_half_size, power_block->p, power_block_half_size)) {
             switch (power_block->kind) {
                 case POWER_INVINCIBILITY: {
                     invincibility_t += 5.f;
@@ -723,18 +725,17 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         else draw_rect(game, ball->p, ball->half_size, 0xFF00FFFF);
     }
 
+    // Player render
     {
-        player_dp.x = (player_desired_p.x - player_p.x) / dt;
-        player_p = player_desired_p;
+        player_target_dp.x = (player_desired_p.x - player_target_p.x) / dt;
+        player_target_p = player_desired_p;
 
         if (invincibility_t > 0) {
             invincibility_t -= dt;
-            draw_rect(game, player_p, player_half_size, 0xFFFFFFFF);
+            draw_rect(game, player_visual_p, player_half_size, 0xFFFFFFFF);
         }
-        else draw_rect(game, player_p, player_half_size, 0xFF00FF00);
+        else draw_rect(game, player_visual_p, player_half_size, 0xFF00FF00);
     }
-
-    draw_rect(game, add_v2(player_visual_p, (v2){0, 10}), player_half_size, 0xFF0000FF);
 
     if (comet_t > 0) comet_t -= dt;
     if (strong_blocks_t > 0) strong_blocks_t -= dt;
