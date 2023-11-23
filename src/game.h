@@ -88,7 +88,7 @@ typedef struct {
     f32 base_speed;
     f32 speed_multiplier;
 
-    Ball_Trail trails[16];
+    Ball_Trail trails[128];
     int next_trail;
     f32 trail_spawner_t;
 } Ball;
