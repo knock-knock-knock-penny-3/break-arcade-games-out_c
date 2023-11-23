@@ -71,6 +71,11 @@ typedef struct Block {
 } Block;
 
 typedef struct {
+    v2 p;
+    f32 life;
+} Ball_Trail;
+
+typedef struct {
     u32 flags;
 
     v2 p;
@@ -82,6 +87,10 @@ typedef struct {
 
     f32 base_speed;
     f32 speed_multiplier;
+
+    Ball_Trail trails[16];
+    int next_trail;
+    f32 trail_spawner_t;
 } Ball;
 
 typedef struct {

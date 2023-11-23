@@ -15,6 +15,24 @@ RGBA color_converter(u32 hexValue) {
     return rgba;
 }
 
+u32 rgba_converter(RGBA rgba) {
+    u32 color = 0xFF;
+
+    color = (color << 8) | rgba.a;
+    color = (color << 8) | rgba.r;
+    color = (color << 8) | rgba.g;
+    color = (color << 8) | rgba.b;
+
+    return color;
+}
+
+u32 set_alpha(u32 color, u8 alpha) {
+    RGBA rgba = color_converter(color);
+    rgba.a = clamp(0, alpha, 255);
+
+    return rgba_converter(rgba);
+}
+
 void set_screen(Game *game, int width, int height) {
     game->screen_size = (v2i){SCREEN_WIDTH, SCREEN_HEIGHT};
     game->screen_center = mul_v2(v2i_to_v2(game->screen_size), .5f);

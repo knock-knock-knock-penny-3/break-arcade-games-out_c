@@ -591,10 +591,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         // Spring effect
         v2 player_visual_ddp = {0};
-        player_visual_ddp.x = 10.f * (player_desired_p.x - player_visual_p.x) + 40.f * (0 - player_visual_dp.x);
+        player_visual_ddp.x = 1000.f * (player_desired_p.x - player_visual_p.x) + 35.f * (0 - player_visual_dp.x);
         player_visual_dp = add_v2(player_visual_dp, mul_v2(player_visual_ddp, dt));
         player_visual_p = add_v2(player_visual_p, add_v2(
-            player_visual_dp,
+            mul_v2(player_visual_dp, dt),
             mul_v2(player_visual_ddp, square(dt) * .5f)
         ));
 
@@ -719,7 +719,30 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     // Render balls
     for_each_ball {
         if (!(ball->flags & BALL_ACTIVE)) continue;
+
         ball->p = ball->desired_p;
+
+        ball->trail_spawner_t -= dt;
+        if (ball->trail_spawner_t <= 0.f) {
+            ball->trail_spawner_t += .001f;
+
+            Ball_Trail *new_trail = ball->trails + ball->next_trail++;
+            if (ball->next_trail >= array_count(ball->trails)) ball->next_trail = 0;
+            new_trail->p = ball->p;
+            new_trail->life = array_count(ball->trails) * .01f;
+        }
+
+        for (int i = 0; i < array_count(ball->trails); i++) {
+            Ball_Trail *trail = ball->trails + i;
+            if (trail->life <= 0.f) continue;
+
+            u8 alpha = trail->life * 255 / (array_count(ball->trails) * .01f);
+            SDL_Log("%f => %d", trail->life, alpha);
+            draw_rect(game, trail->p, ball->half_size, set_alpha(0xFFFFFFFF, alpha));
+            trail->life -= dt;
+        }
+        SDL_Log("--------------");
+
         if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
         else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, ball->half_size, RIVAL_B_COLOR);
         else draw_rect(game, ball->p, ball->half_size, 0xFF00FFFF);
