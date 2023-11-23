@@ -596,6 +596,9 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             player_visual_dp,
             mul_v2(player_visual_ddp, square(dt) * .5f)
         ));
+
+        player_half_size.x = 10.f + absf(player_dp.x * .01f);
+        player_half_size.y = 2.f - absf(player_dp.x * .0005f);
     }
 
     // Update balls
