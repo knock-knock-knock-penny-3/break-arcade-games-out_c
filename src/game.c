@@ -729,19 +729,17 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             Ball_Trail *new_trail = ball->trails + ball->next_trail++;
             if (ball->next_trail >= array_count(ball->trails)) ball->next_trail = 0;
             new_trail->p = ball->p;
-            new_trail->life = array_count(ball->trails) * .01f;
+            new_trail->life = array_count(ball->trails) * dt;
         }
 
         for (int i = 0; i < array_count(ball->trails); i++) {
             Ball_Trail *trail = ball->trails + i;
             if (trail->life <= 0.f) continue;
 
-            u8 alpha = trail->life * 255 / (array_count(ball->trails) * .01f);
-            SDL_Log("%f => %d", trail->life, alpha);
+            u8 alpha = trail->life * 255 / (array_count(ball->trails) * dt);
             draw_rect(game, trail->p, ball->half_size, set_alpha(0xFFFFFFFF, alpha));
             trail->life -= dt;
         }
-        SDL_Log("--------------");
 
         if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
         else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, ball->half_size, RIVAL_B_COLOR);
