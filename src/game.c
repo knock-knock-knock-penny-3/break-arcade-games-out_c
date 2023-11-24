@@ -249,7 +249,7 @@ internal void create_invader(v2 p) {
 }
 
 internal void calculate_all_neighbours() {
-    for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
+    for_each_block {
         if (!block->life) break;
 
         for (Block *test_block = blocks; test_block  != blocks + array_count(blocks); test_block ++) {
@@ -460,7 +460,7 @@ inline void start_game(Game *game, Level level) {
 
     num_blocks = 0;
     blocks_destroyed = 0;
-    for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
+    for_each_block {
         block->life = 0;
     }
 
@@ -548,7 +548,7 @@ inline void start_game(Game *game, Level level) {
             create_block_block(num_x, num_y, (v2){.05f, .05f}, 0.f, -30.f, block_half_size, 2.f, 0);
             level_state.pong.enemy_half_size.x = num_x * (block_half_size.x * 1.05f);
 
-            for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
+            for_each_block {
                 if (!block->life) continue;
 
                 if (random_choice(3)) {
@@ -697,7 +697,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     clear_arena_screen(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, arena_top_wall_visual_p, 0xFF551100);
 
-    for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
+    for_each_block {
         if (!block->life) continue;
 
         simulate_block_for_level(game, block, current_level);
