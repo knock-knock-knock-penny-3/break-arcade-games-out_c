@@ -12,6 +12,8 @@ int player_life;
 
 v2 player_visual_p;
 v2 player_visual_dp;
+f32 player_squeeze_factor;
+f32 player_squeeze_factor_d;
 
 f32 arena_left_wall_visual_p;
 f32 arena_left_wall_visual_dp;
@@ -604,24 +606,26 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             player_desired_p.x = player_target_p.x - mouse_world_dp;
 
         // Wall collision
-        f32 squeeze_factor = 0.f;
-
         f32 left_most_p = arena_left_wall_visual_p + base_player_half_size.x;
         if (player_desired_p.x < left_most_p) {
-            squeeze_factor = (player_desired_p.x - left_most_p) * -.2f;
-            player_desired_p.x = left_most_p - squeeze_factor;
+            player_squeeze_factor_d = (player_desired_p.x - left_most_p) * -1.f;
+            player_desired_p.x = left_most_p;
             player_target_dp.x = 0.f;
         }
 
         f32 right_most_p = arena_right_wall_visual_p - base_player_half_size.x;
         if (player_desired_p.x > right_most_p) {
-            squeeze_factor = (player_desired_p.x - right_most_p) * .2f;
-            player_desired_p.x = right_most_p + squeeze_factor;
+            player_squeeze_factor_d = (player_desired_p.x - right_most_p) * 1.f;
+            player_desired_p.x = right_most_p;
             player_target_dp.x = 0.f;
         }
 
         player_desired_p.y = player_target_p.y;
         player_visual_p.y = player_target_p.y;
+
+        f32 player_squeeze_factor_dd = 100.f * -player_squeeze_factor + 10.f * -player_squeeze_factor_d;
+        player_squeeze_factor_d += player_squeeze_factor_dd * dt;
+        player_squeeze_factor += player_squeeze_factor_dd * square(dt) * .5f + player_squeeze_factor_d * dt;
 
         // Spring effect
         v2 player_visual_ddp = {0};
@@ -633,8 +637,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         ));
 
         // Deform effect
-        player_half_size.x = 10.f + absf(player_target_dp.x * .01f) - squeeze_factor;
-        player_half_size.y = 2.f - absf(player_target_dp.x * .0005f) + squeeze_factor;
+        player_half_size.x = 10.f + absf(player_target_dp.x * 1.f * dt) - player_squeeze_factor;
+        player_half_size.y = max(.5f, 2.f - absf(player_target_dp.x * .05f * dt) + player_squeeze_factor);
     }
 
     // Update balls
@@ -795,7 +799,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     // Player render
     {
-        player_target_dp.x = (player_desired_p.x - player_target_p.x) / dt;
+        player_target_dp.x = (player_desired_p.x - player_visual_p.x) / dt;
         player_target_p = player_desired_p;
 
         if (invincibility_t > 0) {
