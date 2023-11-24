@@ -657,16 +657,16 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 number_of_triple_shots--;
                 spawn_triple_shot_balls();
             }
-        } else if (ball->desired_p.x + ball->half_size.x > game->arena_half_size.x) {
+        } else if (ball->desired_p.x + ball->half_size.x > arena_right_wall_visual_p) {
             // Ball collision with right border
-            ball->desired_p.x = game->arena_half_size.x - ball->half_size.x;
+            ball->desired_p.x = arena_right_wall_visual_p - ball->half_size.x;
             ball->dp.x *= -1;
-            arena_right_wall_visual_dp -= 40.f;
-        } else if (ball->desired_p.x - ball->half_size.x < -game->arena_half_size.x) {
+            arena_right_wall_visual_dp -= 30.f;
+        } else if (ball->desired_p.x - ball->half_size.x < arena_left_wall_visual_p) {
             // Ball collision with left border
-            ball->desired_p.x = -game->arena_half_size.x + ball->half_size.x;
+            ball->desired_p.x = arena_left_wall_visual_p + ball->half_size.x;
             ball->dp.x *= -1;
-            arena_left_wall_visual_dp += 40.f;
+            arena_left_wall_visual_dp += 30.f;
         }
 
         if (ball->desired_p.y + ball->half_size.y > game->arena_half_size.y) {
