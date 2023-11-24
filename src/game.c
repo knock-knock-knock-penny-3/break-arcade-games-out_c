@@ -324,11 +324,11 @@ internal void simulate_level(Game *game, Level level, f32 dt) {
                                 mul_v2(ddp, square(dt))
                             );
 
-            if (desired_p.x > game->arena_half_size.x - pong->enemy_half_size.x) {
-                desired_p.x = game->arena_half_size.x - pong->enemy_half_size.x;
+            if (desired_p.x > arena_right_wall_visual_p - pong->enemy_half_size.x) {
+                desired_p.x = arena_right_wall_visual_p - pong->enemy_half_size.x;
                 desired_dp = mul_v2(desired_dp, -.5f);
-            } else if (desired_p.x < -game->arena_half_size.x + pong->enemy_half_size.x) {
-                desired_p.x = -game->arena_half_size.x + pong->enemy_half_size.x;
+            } else if (desired_p.x < arena_left_wall_visual_p + pong->enemy_half_size.x) {
+                desired_p.x = arena_left_wall_visual_p + pong->enemy_half_size.x;
                 desired_dp = mul_v2(desired_dp, -.5f);
             }
 
