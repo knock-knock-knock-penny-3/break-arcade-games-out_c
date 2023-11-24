@@ -466,7 +466,7 @@ inline void start_game(Game *game, Level level) {
 
     switch (level) {
         case L01_NORMAL: {
-//            create_block_block(16, 7, (v2){.1f, .1f}, 0.f, 0.f, (v2){4.8f, 2.4f}, 1.f, 0);
+            create_block_block(16, 7, (v2){.1f, .1f}, 0.f, 0.f, (v2){4.8f, 2.4f}, 1.f, 0);
         } break;
 
         case L02_WALL: {
@@ -678,6 +678,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         if (ball->desired_p.y + ball->half_size.y > arena_top_wall_visual_p) {
             // Ball collision with top border
             ball->desired_p.y = arena_top_wall_visual_p - ball->half_size.y;
+            ball->dp.y = max(20, ball->dp.y);
             reset_and_reverse_ball_dp_y(ball);
             arena_top_wall_visual_dp = -30.f;
             process_ball_when_dp_y_down(ball);
@@ -757,32 +758,39 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     // Render balls
     for_each_ball {
-        if (!(ball->flags & BALL_ACTIVE)) continue;
+        if (!(ball->flags & BALL_ACTIVE) && !(ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN)) continue;
 
-        ball->p = ball->desired_p;
-
-        ball->trail_spawner_t -= dt;
-        if (ball->trail_spawner_t <= 0.f) {
-            ball->trail_spawner_t += .001f;
-
-            Ball_Trail *new_trail = ball->trails + ball->next_trail++;
-            if (ball->next_trail >= array_count(ball->trails)) ball->next_trail = 0;
-            new_trail->p = ball->p;
-            new_trail->life = array_count(ball->trails) * .002f;
-        }
+        // render trails
+        u32 trail_color = 0xFF00FFFF;
+        if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) trail_color = 0xFFFFFF00;
+        if (comet_t > 0.f) trail_color = 0xFFFF0000;
 
         for (int i = 0; i < array_count(ball->trails); i++) {
             Ball_Trail *trail = ball->trails + i;
             if (trail->life <= 0.f) continue;
 
             u8 alpha = trail->life * 255 / (array_count(ball->trails) * .002f);
-            draw_rect(game, trail->p, ball->half_size, set_alpha(0xFF00FFFF, alpha));
+            draw_rect(game, trail->p, ball->half_size, set_alpha(trail_color, alpha));
             trail->life -= dt;
         }
 
-        if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
-        else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, ball->half_size, RIVAL_B_COLOR);
-        else draw_rect(game, ball->p, ball->half_size, 0xFFFFFFFF);
+        if (ball->flags & BALL_ACTIVE) {
+            ball->p = ball->desired_p;
+
+            ball->trail_spawner_t -= dt;
+            if (ball->trail_spawner_t <= 0.f) {
+                ball->trail_spawner_t += .001f;
+
+                Ball_Trail *new_trail = ball->trails + ball->next_trail++;
+                if (ball->next_trail >= array_count(ball->trails)) ball->next_trail = 0;
+                new_trail->p = ball->p;
+                new_trail->life = array_count(ball->trails) * .002f;
+            }
+
+            if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
+            else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, ball->half_size, RIVAL_B_COLOR);
+            else draw_rect(game, ball->p, ball->half_size, 0xFFFFFFFF);
+        }
     }
 
     // Player render
