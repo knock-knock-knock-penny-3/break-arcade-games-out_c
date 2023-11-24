@@ -7,6 +7,7 @@ int next_ball;
 v2 player_target_p;
 v2 player_target_dp;
 v2 player_half_size;
+v2 base_player_half_size;
 int player_life;
 
 v2 player_visual_p;
@@ -437,6 +438,7 @@ inline void start_game(Game *game, Level level) {
 
     player_target_p.y = -40;
     player_half_size = (v2){10, 2};
+    base_player_half_size = player_half_size;
 
     reset_power();
 
@@ -581,17 +583,35 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         f32 speed_multiplier = 1.f;
         if (slow_player_t > 0) speed_multiplier = .1f;
 
+        f32 mouse_world_dp = clamp(-100.f, speed_multiplier * pixels_to_world(game, input->mouse_dp).x, 100.f);
+
         if (inverted_controls_t <= 0)
-            player_desired_p.x = player_target_p.x + speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+            player_desired_p.x = player_target_p.x + mouse_world_dp;
         else
-            player_desired_p.x = player_target_p.x - speed_multiplier * pixels_to_world(game, input->mouse_dp).x;
+            player_desired_p.x = player_target_p.x - mouse_world_dp;
+
+        // Wall collision
+//        player_desired_p.x = clamp(
+//            -game->arena_half_size.x + base_player_half_size.x,
+//            player_desired_p.x,
+//            game->arena_half_size.x - base_player_half_size.x
+//        );
+        if (player_desired_p.x < -game->arena_half_size.x + base_player_half_size.x) {
+            player_desired_p.x = -game->arena_half_size.x + base_player_half_size.x;
+            player_target_dp.x = 0.f;
+        }
+
+        if (player_desired_p.x > game->arena_half_size.x - base_player_half_size.x) {
+            player_desired_p.x = game->arena_half_size.x - base_player_half_size.x;
+            player_target_dp.x = 0.f;
+        }
 
         player_desired_p.y = player_target_p.y;
         player_visual_p.y = player_target_p.y;
 
         // Spring effect
         v2 player_visual_ddp = {0};
-        player_visual_ddp.x = 1000.f * (player_desired_p.x - player_visual_p.x) + 35.f * (0 - player_visual_dp.x);
+        player_visual_ddp.x = 1000.f * (player_desired_p.x - player_visual_p.x) + 40.f * (0 - player_visual_dp.x);
         player_visual_dp = add_v2(player_visual_dp, mul_v2(player_visual_ddp, dt));
         player_visual_p = add_v2(player_visual_p, add_v2(
             mul_v2(player_visual_dp, dt),
