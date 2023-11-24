@@ -675,7 +675,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     simulate_level(game, current_level, dt);
 
-    clear_screen_and_draw_rect(game, game->arena_center, game->arena_half_size, 0xFF551100, 0xFF220500);
+    clear_arena_screen(game, game->arena_center, game->arena_half_size, 0xFF551100);
 
     for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) continue;
@@ -777,6 +777,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
         else draw_rect(game, player_visual_p, player_half_size, 0xFF00FF00);
     }
+
+    draw_arena_rects(game, game->arena_center, game->arena_half_size, 0xFF220500);
 
     if (comet_t > 0) comet_t -= dt;
     if (strong_blocks_t > 0) strong_blocks_t -= dt;

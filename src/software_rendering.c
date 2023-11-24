@@ -231,7 +231,7 @@ void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
     draw_rect_in_pixels(game, x0, y0, x1, y1, color);
 }
 
-void clear_screen_and_draw_rect(Game *game, v2 p, v2 half_size, u32 color, u32 clear_color) {
+void clear_arena_screen(Game *game, v2 p, v2 half_size, u32 color) {
     f32 aspect_multiplier = calculate_aspect_multiplier(game);
 
     half_size.x *= aspect_multiplier * scale;
@@ -247,13 +247,29 @@ void clear_screen_and_draw_rect(Game *game, v2 p, v2 half_size, u32 color, u32 c
     int x1 = (int)(p.x + half_size.x);
     int y1 = (int)(p.y + half_size.y);
 
-    draw_rect_in_pixels(game, x0, y0, x1, y1, color);
+    draw_rect_in_pixels(game, x0, 0, x1, y1, color);    // arena
+}
+
+void draw_arena_rects(Game *game, v2 p, v2 half_size, u32 clear_color) {
+    f32 aspect_multiplier = calculate_aspect_multiplier(game);
+
+    half_size.x *= aspect_multiplier * scale;
+    half_size.y *= aspect_multiplier * scale;
+
+    p.x *= aspect_multiplier * scale;
+    p.y *= aspect_multiplier * scale;
+
+    p = add_v2(p, game->screen_center);
+
+    int x0 = (int)(p.x - half_size.x);
+    int y0 = (int)(p.y - half_size.y);
+    int x1 = (int)(p.x + half_size.x);
+    int y1 = (int)(p.y + half_size.y);
 
 #if DEVELOPMENT
     clear_color = 0xFF665944;
 #endif
-    draw_rect_in_pixels(game, 0, 0, x0, game->screen_size.y, clear_color);           // left border
-    draw_rect_in_pixels(game, x1, 0, game->screen_size.x, game->screen_size.y, clear_color); // right border
-    draw_rect_in_pixels(game, x0, y1, x1, game->screen_size.y, clear_color);         // top border
-    draw_rect_in_pixels(game, x0, 0, x1, y0, color);                          // bottom border
+    draw_rect_in_pixels(game, 0, 0, x0, game->screen_size.y, clear_color);                      // left border
+    draw_rect_in_pixels(game, x1, 0, game->screen_size.x, game->screen_size.y, clear_color);    // right border
+    draw_rect_in_pixels(game, x0, y1, x1, game->screen_size.y, clear_color);                    // top border
 }
