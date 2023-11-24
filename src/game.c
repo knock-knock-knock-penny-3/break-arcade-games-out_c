@@ -591,18 +591,19 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             player_desired_p.x = player_target_p.x - mouse_world_dp;
 
         // Wall collision
-//        player_desired_p.x = clamp(
-//            -game->arena_half_size.x + base_player_half_size.x,
-//            player_desired_p.x,
-//            game->arena_half_size.x - base_player_half_size.x
-//        );
-        if (player_desired_p.x < -game->arena_half_size.x + base_player_half_size.x) {
-            player_desired_p.x = -game->arena_half_size.x + base_player_half_size.x;
+        f32 squeeze_factor = 0.f;
+
+        f32 left_most_p = -game->arena_half_size.x + base_player_half_size.x;
+        if (player_desired_p.x < left_most_p) {
+            squeeze_factor = (player_desired_p.x - left_most_p) * -.2f;
+            player_desired_p.x = left_most_p - squeeze_factor;
             player_target_dp.x = 0.f;
         }
 
-        if (player_desired_p.x > game->arena_half_size.x - base_player_half_size.x) {
-            player_desired_p.x = game->arena_half_size.x - base_player_half_size.x;
+        f32 right_most_p = game->arena_half_size.x - base_player_half_size.x;
+        if (player_desired_p.x > right_most_p) {
+            squeeze_factor = (player_desired_p.x - right_most_p) * .2f;
+            player_desired_p.x = right_most_p + squeeze_factor;
             player_target_dp.x = 0.f;
         }
 
@@ -619,8 +620,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         ));
 
         // Deform effect
-        player_half_size.x = 10.f + absf(player_target_dp.x * .01f);
-        player_half_size.y = 2.f - absf(player_target_dp.x * .0005f);
+        player_half_size.x = 10.f + absf(player_target_dp.x * .01f) - squeeze_factor;
+        player_half_size.y = 2.f - absf(player_target_dp.x * .0005f) + squeeze_factor;
     }
 
     // Update balls
@@ -776,6 +777,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             draw_rect(game, player_visual_p, player_half_size, 0xFFFFFFFF);
         }
         else draw_rect(game, player_visual_p, player_half_size, 0xFF00FF00);
+//        draw_rect(game, player_target_p, player_half_size, 0xFF00FF00); // player without spring effect
     }
 
     draw_arena_rects(game, game->arena_center, game->arena_half_size, 0xFF220500);
