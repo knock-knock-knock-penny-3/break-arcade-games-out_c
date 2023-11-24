@@ -17,6 +17,8 @@ f32 arena_left_wall_visual_p;
 f32 arena_left_wall_visual_dp;
 f32 arena_right_wall_visual_p;
 f32 arena_right_wall_visual_dp;
+f32 arena_top_wall_visual_p;
+f32 arena_top_wall_visual_dp;
 
 int score;
 int touchless_bonus;
@@ -451,6 +453,8 @@ inline void start_game(Game *game, Level level) {
     arena_left_wall_visual_dp = 0.f;
     arena_right_wall_visual_p = game->arena_half_size.x;
     arena_right_wall_visual_dp = 0.f;
+    arena_top_wall_visual_p = game->arena_half_size.y;
+    arena_top_wall_visual_dp = 0.f;
 
     reset_power();
 
@@ -669,10 +673,11 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             arena_left_wall_visual_dp += 30.f;
         }
 
-        if (ball->desired_p.y + ball->half_size.y > game->arena_half_size.y) {
+        if (ball->desired_p.y + ball->half_size.y > arena_top_wall_visual_p) {
             // Ball collision with top border
-            ball->desired_p.y = game->arena_half_size.y - ball->half_size.y;
+            ball->desired_p.y = arena_top_wall_visual_p - ball->half_size.y;
             reset_and_reverse_ball_dp_y(ball);
+            arena_top_wall_visual_dp -= 30.f;
             process_ball_when_dp_y_down(ball);
         }
 
@@ -687,7 +692,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     simulate_level(game, current_level, dt);
 
-    clear_arena_screen(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, game->arena_half_size.y, 0xFF551100);
+    clear_arena_screen(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, arena_top_wall_visual_p, 0xFF551100);
 
     for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) continue;
@@ -801,7 +806,11 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         arena_right_wall_visual_dp += arena_right_wall_visual_ddp * dt;
         arena_right_wall_visual_p += arena_right_wall_visual_ddp * square(dt) * .5f + arena_right_wall_visual_dp * dt;
 
-        draw_arena_rects(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, game->arena_half_size.y, 0xFF220500);
+        f32 arena_top_wall_visual_ddp = 150.f * (game->arena_half_size.y - arena_top_wall_visual_p) + 7.f * (-arena_top_wall_visual_dp);
+        arena_top_wall_visual_dp += arena_top_wall_visual_ddp * dt;
+        arena_top_wall_visual_p += arena_top_wall_visual_ddp * square(dt) * .5f + arena_top_wall_visual_dp * dt;
+
+        draw_arena_rects(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, arena_top_wall_visual_p, 0xFF220500);
     }
 
     if (comet_t > 0) comet_t -= dt;
