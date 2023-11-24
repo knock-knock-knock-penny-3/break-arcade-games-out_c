@@ -606,14 +606,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         // Wall collision
         f32 squeeze_factor = 0.f;
 
-        f32 left_most_p = -game->arena_half_size.x + base_player_half_size.x;
+        f32 left_most_p = arena_left_wall_visual_p + base_player_half_size.x;
         if (player_desired_p.x < left_most_p) {
             squeeze_factor = (player_desired_p.x - left_most_p) * -.2f;
             player_desired_p.x = left_most_p - squeeze_factor;
             player_target_dp.x = 0.f;
         }
 
-        f32 right_most_p = game->arena_half_size.x - base_player_half_size.x;
+        f32 right_most_p = arena_right_wall_visual_p - base_player_half_size.x;
         if (player_desired_p.x > right_most_p) {
             squeeze_factor = (player_desired_p.x - right_most_p) * .2f;
             player_desired_p.x = right_most_p + squeeze_factor;
