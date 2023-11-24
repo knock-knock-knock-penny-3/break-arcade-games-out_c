@@ -45,6 +45,10 @@ inline v2 v2i_to_v2(v2i a) {
     return (v2){(f32)a.x, (f32)a.y};
 }
 
+inline v2i v2_to_v2i(v2 a) {
+    return (v2i){(int)a.x, (int)a.y};
+}
+
 u32 make_color_from_grey(u8 grey) {
     return (grey << 0) | (grey << 8) | (grey << 16) | (0xFF << 24);
 }

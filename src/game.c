@@ -596,7 +596,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         f32 speed_multiplier = 1.f;
         if (slow_player_t > 0) speed_multiplier = .1f;
 
-        f32 mouse_world_dp = clamp(-100.f, speed_multiplier * pixels_to_world(game, input->mouse_dp).x, 100.f);
+        f32 mouse_world_dp = speed_multiplier * clampf(-100.f, pixels_dp_to_world(game, input->mouse_dp).x, 100.f);
 
         if (inverted_controls_t <= 0)
             player_desired_p.x = player_target_p.x + mouse_world_dp;
