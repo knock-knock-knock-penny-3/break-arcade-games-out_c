@@ -612,7 +612,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         // Spring effect
         v2 player_visual_ddp = {0};
-        player_visual_ddp.x = 1000.f * (player_desired_p.x - player_visual_p.x) + 40.f * (0 - player_visual_dp.x);
+        player_visual_ddp.x = 1500.f * (player_desired_p.x - player_visual_p.x) + 40.f * (0 - player_visual_dp.x);
         player_visual_dp = add_v2(player_visual_dp, mul_v2(player_visual_ddp, dt));
         player_visual_p = add_v2(player_visual_p, add_v2(
             mul_v2(player_visual_dp, dt),
