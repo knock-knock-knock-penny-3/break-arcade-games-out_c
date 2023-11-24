@@ -466,7 +466,7 @@ inline void start_game(Game *game, Level level) {
 
     switch (level) {
         case L01_NORMAL: {
-            create_block_block(16, 7, (v2){.1f, .1f}, 0.f, 0.f, (v2){4.8f, 2.4f}, 1.f, 0);
+//            create_block_block(16, 7, (v2){.1f, .1f}, 0.f, 0.f, (v2){4.8f, 2.4f}, 1.f, 0);
         } break;
 
         case L02_WALL: {
@@ -664,20 +664,22 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         } else if (ball->desired_p.x + ball->half_size.x > arena_right_wall_visual_p) {
             // Ball collision with right border
             ball->desired_p.x = arena_right_wall_visual_p - ball->half_size.x;
+            ball->dp.x = max(20, ball->dp.x);
             ball->dp.x *= -1;
-            arena_right_wall_visual_dp -= 30.f;
+            arena_right_wall_visual_dp = -30.f;
         } else if (ball->desired_p.x - ball->half_size.x < arena_left_wall_visual_p) {
             // Ball collision with left border
             ball->desired_p.x = arena_left_wall_visual_p + ball->half_size.x;
             ball->dp.x *= -1;
-            arena_left_wall_visual_dp += 30.f;
+            ball->dp.x = max(20, ball->dp.x);
+            arena_left_wall_visual_dp = 30.f;
         }
 
         if (ball->desired_p.y + ball->half_size.y > arena_top_wall_visual_p) {
             // Ball collision with top border
             ball->desired_p.y = arena_top_wall_visual_p - ball->half_size.y;
             reset_and_reverse_ball_dp_y(ball);
-            arena_top_wall_visual_dp -= 30.f;
+            arena_top_wall_visual_dp = -30.f;
             process_ball_when_dp_y_down(ball);
         }
 
