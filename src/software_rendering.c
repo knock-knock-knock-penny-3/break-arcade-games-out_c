@@ -250,21 +250,22 @@ void clear_arena_screen(Game *game, v2 p, v2 half_size, u32 color) {
     draw_rect_in_pixels(game, x0, 0, x1, y1, color);    // arena
 }
 
-void draw_arena_rects(Game *game, v2 p, v2 half_size, u32 clear_color) {
+void draw_arena_rects(Game *game, v2 p, f32 left_most, f32 right_most, f32 half_size_y, u32 clear_color) {
     f32 aspect_multiplier = calculate_aspect_multiplier(game);
 
-    half_size.x *= aspect_multiplier * scale;
-    half_size.y *= aspect_multiplier * scale;
+    half_size_y *= aspect_multiplier * scale;
+    left_most *= aspect_multiplier * scale;
+    right_most *= aspect_multiplier * scale;
 
     p.x *= aspect_multiplier * scale;
     p.y *= aspect_multiplier * scale;
 
     p = add_v2(p, game->screen_center);
 
-    int x0 = (int)(p.x - half_size.x);
-    int y0 = (int)(p.y - half_size.y);
-    int x1 = (int)(p.x + half_size.x);
-    int y1 = (int)(p.y + half_size.y);
+    int x0 = (int)(p.x + left_most);
+    int y0 = (int)(p.y - half_size_y);
+    int x1 = (int)(p.x + right_most);
+    int y1 = (int)(p.y + half_size_y);
 
 #if DEVELOPMENT
     clear_color = 0xFF665944;

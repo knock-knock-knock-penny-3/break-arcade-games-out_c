@@ -13,6 +13,11 @@ int player_life;
 v2 player_visual_p;
 v2 player_visual_dp;
 
+f32 arena_left_wall_visual_p;
+f32 arena_left_wall_visual_dp;
+f32 arena_right_wall_visual_p;
+f32 arena_right_wall_visual_dp;
+
 int score;
 int touchless_bonus;
 
@@ -440,6 +445,13 @@ inline void start_game(Game *game, Level level) {
     player_half_size = (v2){10, 2};
     base_player_half_size = player_half_size;
 
+    game->arena_half_size = (v2){85, 45};
+    game->arena_center = (v2){0, 0};
+    arena_left_wall_visual_p = -game->arena_half_size.x;
+    arena_left_wall_visual_dp = 0.f;
+    arena_right_wall_visual_p = game->arena_half_size.x;
+    arena_right_wall_visual_dp = 0.f;
+
     reset_power();
 
     num_blocks = 0;
@@ -570,9 +582,6 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         initialized = true;
         current_level = 0;
         start_game(game, current_level);
-
-        game->arena_half_size = (v2){85, 45};
-        game->arena_center = (v2){0, 0};
 
         power_block_half_size = (v2){2, 2};
     }
@@ -780,7 +789,10 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 //        draw_rect(game, player_target_p, player_half_size, 0xFF00FF00); // player without spring effect
     }
 
-    draw_arena_rects(game, game->arena_center, game->arena_half_size, 0xFF220500);
+    // Wall movements
+    {
+        draw_arena_rects(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, game->arena_half_size.y, 0xFF220500);
+    }
 
     if (comet_t > 0) comet_t -= dt;
     if (strong_blocks_t > 0) strong_blocks_t -= dt;
