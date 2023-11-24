@@ -658,13 +658,15 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 spawn_triple_shot_balls();
             }
         } else if (ball->desired_p.x + ball->half_size.x > game->arena_half_size.x) {
-            // Ball collision with left border
+            // Ball collision with right border
             ball->desired_p.x = game->arena_half_size.x - ball->half_size.x;
             ball->dp.x *= -1;
+            arena_right_wall_visual_dp -= 40.f;
         } else if (ball->desired_p.x - ball->half_size.x < -game->arena_half_size.x) {
-            // Ball collision with right border
+            // Ball collision with left border
             ball->desired_p.x = -game->arena_half_size.x + ball->half_size.x;
             ball->dp.x *= -1;
+            arena_left_wall_visual_dp += 40.f;
         }
 
         if (ball->desired_p.y + ball->half_size.y > game->arena_half_size.y) {
@@ -685,7 +687,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     simulate_level(game, current_level, dt);
 
-    clear_arena_screen(game, game->arena_center, game->arena_half_size, 0xFF551100);
+    clear_arena_screen(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, game->arena_half_size.y, 0xFF551100);
 
     for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) continue;
@@ -791,6 +793,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     // Wall movements
     {
+        f32 arena_left_wall_visual_ddp = 150.f * (-game->arena_half_size.x - arena_left_wall_visual_p) + 7.f * (-arena_left_wall_visual_dp);
+        arena_left_wall_visual_dp += arena_left_wall_visual_ddp * dt;
+        arena_left_wall_visual_p += arena_left_wall_visual_ddp * square(dt) * .5f + arena_left_wall_visual_dp * dt;
+
+        f32 arena_right_wall_visual_ddp = 150.f * (game->arena_half_size.x - arena_right_wall_visual_p) + 7.f * (-arena_right_wall_visual_dp);
+        arena_right_wall_visual_dp += arena_right_wall_visual_ddp * dt;
+        arena_right_wall_visual_p += arena_right_wall_visual_ddp * square(dt) * .5f + arena_right_wall_visual_dp * dt;
+
         draw_arena_rects(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, game->arena_half_size.y, 0xFF220500);
     }
 
