@@ -637,7 +637,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         ));
 
         // Deform effect
-        player_half_size.x = 10.f + absf(player_target_dp.x * 1.f * dt) - player_squeeze_factor;
+        player_half_size.x = base_player_half_size.x + absf(player_target_dp.x * 1.f * dt) - player_squeeze_factor;
         player_half_size.y = max(.5f, 2.f - absf(player_target_dp.x * .05f * dt) + player_squeeze_factor);
     }
 
@@ -782,8 +782,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             ball->p = ball->desired_p;
 
             ball->trail_spawner_t -= dt;
-            if (ball->trail_spawner_t <= 0.f) {
-                ball->trail_spawner_t += .001f;
+            while (ball->trail_spawner_t <= 0.f) {
+                ball->trail_spawner_t += .005f;
 
                 Ball_Trail *new_trail = ball->trails + ball->next_trail++;
                 if (ball->next_trail >= array_count(ball->trails)) ball->next_trail = 0;
