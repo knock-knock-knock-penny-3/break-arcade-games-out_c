@@ -55,7 +55,7 @@ f32 dt_multiplier = 1.f;
 b32 advance_level = false;
 #endif
 
-internal Particle* spawn_particle(v2 p, f32 dp_scale, v2 half_size, f32 life, u32 color) {
+internal Particle* spawn_particle(v2 p, f32 dp_scale, v2 half_size, f32 life, f32 life_d, u32 color) {
     Particle *particle = particles + next_particle++;
     if (next_particle >= array_count(particles)) next_particle = 0;
 
@@ -63,6 +63,7 @@ internal Particle* spawn_particle(v2 p, f32 dp_scale, v2 half_size, f32 life, u3
     particle->dp = (v2){random_bilateral() * dp_scale, random_bilateral() * dp_scale};
     particle->half_size = half_size;
     particle->life = life;
+    particle->life_d = life_d;
     particle->max_life = life;
     particle->color = color;
 
@@ -74,7 +75,7 @@ internal void spawn_particle_explosion(int count, v2 p, f32 dp_scale, f32 base_s
         base_size += random_bilateral() * base_size * .1f;
         base_life += random_bilateral() * base_life * .1f;
 
-        Particle *particle = spawn_particle(p, dp_scale, (v2){base_size, base_size}, base_life, color);
+        Particle *particle = spawn_particle(p, dp_scale, (v2){base_size, base_size}, base_life, 1.f, color);
     }
 }
 
@@ -158,8 +159,10 @@ internal void spawn_power_block(Power_Block_Kind kind, v2 p) {
     power_block->kind = kind;
 }
 
-internal void block_destroyed(Block *block, b32 maybe_destroy_neighbours) {
-    spawn_particle_explosion(20, block->p, 12.f, 1.5f, .15f, block->color);
+internal void block_destroyed(Block *block, Ball *ball, b32 maybe_destroy_neighbours) {
+//    spawn_particle_explosion(20, block->p, 12.f, 1.5f, .15f, block->color);
+    Particle *block_particle = spawn_particle(block->p, 0.f, block->half_size, 1.f, 3.f, block->color);
+    block_particle->dp = sub_v2(ball->p, block->p);
 
     test_for_win_condition();
 
@@ -172,7 +175,7 @@ internal void block_destroyed(Block *block, b32 maybe_destroy_neighbours) {
             if (!block->neighbours[i]) break;
             if (block->neighbours[i]->life) {
                 block->neighbours[i]->life = 0;
-                block_destroyed(block->neighbours[i], false);
+                block_destroyed(block->neighbours[i], ball, false);
             }
         }
     }
@@ -209,7 +212,7 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
 
                 if (strong_blocks_t <= 0) {
                     block->life--;
-                    if (!block->life) block_destroyed(block, true);
+                    if (!block->life) block_destroyed(block, ball, true);
                 }
                 return true;
             }
@@ -231,7 +234,7 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
 
                 if (strong_blocks_t <= 0) {
                     block->life--;
-                    if (!block->life) block_destroyed(block, true);
+                    if (!block->life) block_destroyed(block, ball, true);
                 }
                 return true;
             }
@@ -804,7 +807,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         Particle *particle= particles + i;
         if (particle->life <= 0.f) continue;
 
-        particle->life -= dt;
+        particle->life -= particle->life_d * dt;
         particle->p = add_v2(particle->p, mul_v2(particle->dp, dt));
 
         u8 alpha = map_into_range_normalized(0, particle->life, particle->max_life) * 255 * .5f;
@@ -846,7 +849,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 color.b = 0x00;
             }
 
-            Particle *particle = spawn_particle(ball->p, dp, ball->half_size, life, rgba_converter(color));
+            Particle *particle = spawn_particle(ball->p, dp, ball->half_size, life, 1.f, rgba_converter(color));
         }
 
         if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
