@@ -62,6 +62,7 @@ internal void spawn_particle(v2 p, v2 half_size, f32 life, u32 color) {
     particle->p = p;
     particle->half_size = half_size;
     particle->life = life;
+    particle->max_life = life;
     particle->color = color;
 }
 
@@ -782,7 +783,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         Particle *particle= particles + i;
         if (particle->life <= 0.f) continue;
 
-        u8 alpha = particle->life / .32f * 255 * .5f;
+        u8 alpha = particle->life / particle->max_life * 255 * .5f;
         draw_rect(game, particle->p, particle->half_size, set_alpha(particle->color, alpha));
         particle->life -= dt;
     }
@@ -798,10 +799,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             ball->trail_spawner_t += .005f;
 
             u32 color = 0xFF00FFFF;
-            if (comet_t > 0.f) color = 0xFFFF0000;
-            else if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) color = 0xFFFFFF00;
+            f32 life = .32f;
+            if (comet_t > 0.f) {
+                color = 0xFFFF0000;
+                life = 1.f;
+            }
+            if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) color = 0xFFFFFF00;
 
-            spawn_particle(ball->p, ball->half_size, .32f, color);
+            spawn_particle(ball->p, ball->half_size, life, color);
         }
 
         if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);

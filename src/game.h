@@ -77,6 +77,7 @@ typedef struct {
     v2 half_size;
 
     f32 life;
+    f32 max_life;
     u32 color;
 } Particle;
 
