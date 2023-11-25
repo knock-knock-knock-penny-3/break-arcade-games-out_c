@@ -4,6 +4,9 @@
 Ball balls[16];
 int next_ball;
 
+Particle particles[1024];
+int next_particle;
+
 v2 player_target_p;
 v2 player_target_dp;
 v2 player_half_size;
@@ -51,6 +54,16 @@ b32 slowmotion = false;
 f32 dt_multiplier = 1.f;
 b32 advance_level = false;
 #endif
+
+internal void spawn_particle(v2 p, v2 half_size, f32 life, u32 color) {
+    Particle *particle = particles + next_particle++;
+    if (next_particle >= array_count(particles)) next_particle = 0;
+
+    particle->p = p;
+    particle->half_size = half_size;
+    particle->life = life;
+    particle->color = color;
+}
 
 internal int random_powerup() {
     return random_int_in_range(1, POWERUP_LAST);
@@ -439,8 +452,12 @@ inline void start_game(Game *game, Level level) {
     zero_struct(level_state);
 
     zero_array(balls);
+    next_ball = 0;
     zero_array(power_blocks);
+    next_power_block = 0;
     zero_array(blocks);
+    zero_array(particles);
+    next_particle = 0;
 
     first_ball_movement = true;
     init_ball(balls);
@@ -760,41 +777,36 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         else draw_rect(game, power_block->p, power_block_half_size, 0xFFFF0000);
     }
 
+    // Render particles
+    for (int i = 0; i < array_count(particles); i++) {
+        Particle *particle= particles + i;
+        if (particle->life <= 0.f) continue;
+
+        u8 alpha = particle->life / .32f * 255 * .5f;
+        draw_rect(game, particle->p, particle->half_size, set_alpha(particle->color, alpha));
+        particle->life -= dt;
+    }
+
     // Render balls
     for_each_ball {
-        if (!(ball->flags & BALL_ACTIVE) && !(ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN)) continue;
+        if (!(ball->flags & BALL_ACTIVE)) continue;
 
-        // render trails
-        u32 trail_color = 0xFF00FFFF;
-        if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) trail_color = 0xFFFFFF00;
-        if (comet_t > 0.f) trail_color = 0xFFFF0000;
+        ball->p = ball->desired_p;
 
-        for (int i = 0; i < array_count(ball->trails); i++) {
-            Ball_Trail *trail = ball->trails + i;
-            if (trail->life <= 0.f) continue;
+        ball->trail_spawner_t -= dt;
+        while (ball->trail_spawner_t <= 0.f) {
+            ball->trail_spawner_t += .005f;
 
-            u8 alpha = trail->life * 255 / (array_count(ball->trails) * .002f);
-            draw_rect(game, trail->p, ball->half_size, set_alpha(trail_color, alpha));
-            trail->life -= dt;
+            u32 color = 0xFF00FFFF;
+            if (comet_t > 0.f) color = 0xFFFF0000;
+            else if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) color = 0xFFFFFF00;
+
+            spawn_particle(ball->p, ball->half_size, .32f, color);
         }
 
-        if (ball->flags & BALL_ACTIVE) {
-            ball->p = ball->desired_p;
-
-            ball->trail_spawner_t -= dt;
-            while (ball->trail_spawner_t <= 0.f) {
-                ball->trail_spawner_t += .005f;
-
-                Ball_Trail *new_trail = ball->trails + ball->next_trail++;
-                if (ball->next_trail >= array_count(ball->trails)) ball->next_trail = 0;
-                new_trail->p = ball->p;
-                new_trail->life = array_count(ball->trails) * .002f;
-            }
-
-            if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
-            else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, ball->half_size, RIVAL_B_COLOR);
-            else draw_rect(game, ball->p, ball->half_size, 0xFFFFFFFF);
-        }
+        if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
+        else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, ball->half_size, RIVAL_B_COLOR);
+        else draw_rect(game, ball->p, ball->half_size, 0xFFFFFFFF);
     }
 
     // Player render
