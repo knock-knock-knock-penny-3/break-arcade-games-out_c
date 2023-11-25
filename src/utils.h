@@ -20,6 +20,8 @@ typedef double f64;
 
 typedef int b32;
 
+#define MAX_U32 UINT32_MAX
+
 typedef struct {
     union {
         struct {

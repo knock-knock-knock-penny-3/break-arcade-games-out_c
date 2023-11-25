@@ -118,6 +118,18 @@ inline int random_int_in_range(int min, int max) { //inclusive
     return result;
 }
 
+inline f32 random_unilateral() {
+    return (f32)random_u32() / (f32)MAX_U32;
+}
+
+inline f32 random_bilateral() {
+    return random_unilateral() * 2.f - 1.f;
+}
+
+inline f32 random_f32_in_range(f32 min, f32 max) {
+    return random_unilateral() * (max - min) + min;
+}
+
 inline f32 map_into_range_normalized(f32 min, f32 val, f32 max) {
     f32 range = max - min;
     return clampf(0.f, (val - min) / range, 1.f);

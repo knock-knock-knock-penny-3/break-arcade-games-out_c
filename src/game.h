@@ -17,6 +17,9 @@
 #define RIVAL_A_COLOR   0xFFFF8934
 #define RIVAL_B_COLOR   0xFF3478FF
 
+#define ARENA_COLOR 0xFF551100
+#define WALL_COLOR  0xFF220500
+
 typedef enum {
     L01_NORMAL,
     L02_WALL,
@@ -87,6 +90,7 @@ typedef struct {
     v2 p;
     v2 dp;
     v2 half_size;
+    u32 color;
 
     v2 collision_test_p;
     v2 desired_p;
