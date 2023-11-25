@@ -26,9 +26,24 @@ u32 rgba_converter(RGBA rgba) {
     return color;
 }
 
-u32 set_alpha(u32 color, u8 alpha) {
-    RGBA rgba = color_converter(color);
-    rgba.a = clamp(0, alpha, 255);
+u32 set_color(u32 base_color, u8 new_value, Color type_value) {
+    RGBA rgba = color_converter(base_color);
+
+    switch (type_value) {
+        case RED: {
+            rgba.r = clamp(0, new_value, 255);
+        } break;
+        case GREEN: {
+            rgba.g = clamp(0, new_value, 255);
+        } break;
+        case BLUE: {
+            rgba.b = clamp(0, new_value, 255);
+        } break;
+        case ALPHA: {
+            rgba.a = clamp(0, new_value, 255);
+        } break;
+        default:
+    }
 
     return rgba_converter(rgba);
 }

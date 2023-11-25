@@ -784,7 +784,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         if (particle->life <= 0.f) continue;
 
         u8 alpha = particle->life / particle->max_life * 255 * .5f;
-        draw_rect(game, particle->p, particle->half_size, set_alpha(particle->color, alpha));
+        draw_rect(game, particle->p, particle->half_size, set_color(particle->color, alpha, ALPHA));
         particle->life -= dt;
     }
 
@@ -796,7 +796,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         ball->trail_spawner_t -= dt;
         while (ball->trail_spawner_t <= 0.f) {
-            ball->trail_spawner_t += .005f;
+            ball->trail_spawner_t += 50.f / len_sq(ball->dp);
 
             u32 color = 0xFF00FFFF;
             f32 life = .32f;

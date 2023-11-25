@@ -1,6 +1,13 @@
 #ifndef BREAKOUT_SOFTWARE_RENDERING_H_INCLUDED
 #define BREAKOUT_SOFTWARE_RENDERING_H_INCLUDED
 
+typedef enum {
+    RED,
+    GREEN,
+    BLUE,
+    ALPHA
+} Color;
+
 // PROTOTYPES
 void set_screen(Game *, int, int);
 void clear_screen(Game *, u32);
@@ -14,6 +21,6 @@ void draw_arena_rects(Game *, v2, f32, f32, f32, u32);
 extern void draw_number(Game *, int, v2, f32, u32);
 //RGBA color_converter(u32);
 //u32 rgba_converter(RGBA);
-u32 set_alpha(u32, u8);
+u32 set_color(u32, u8, Color);
 
 #endif // BREAKOUT_SOFTWARE_RENDERING_H_INCLUDED
