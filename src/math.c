@@ -117,3 +117,13 @@ inline int random_int_in_range(int min, int max) { //inclusive
     result += min;
     return result;
 }
+
+inline f32 map_into_range_normalized(f32 min, f32 val, f32 max) {
+    f32 range = max - min;
+    return (val - min) / range;
+}
+
+inline u8 map_color_into_range_normalized(u8 min, f32 val, u8 max) {
+    u8 range = max - min;
+    return (u8)(val * range + min);
+}

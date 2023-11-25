@@ -25,5 +25,7 @@ extern b32 random_choice(int);
 extern f32 len_sq(v2);
 extern v2 v2i_to_v2(v21);
 extern v2i v2_to_v2i(v2);
+extern f32 map_into_range_normalized(f32, f32, f32);
+extern u8 map_color_into_range_normalized(u8, f32, u8);
 
 #endif // BREAKOUT_MATH_H_INCLUDED
