@@ -8,9 +8,6 @@
 
 #define BALL_FIXED_SPEED 0x10
 
-#define for_each_ball   for (Ball *ball = balls; ball != balls + array_count(balls); ball++)
-#define for_each_block  for (Block *block = blocks; block != blocks + array_count(blocks); block++)
-
 #define BLOCK_RIVAL_A               0x1
 #define BLOCK_RIVAL_B               0x2
 
