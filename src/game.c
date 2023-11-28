@@ -94,6 +94,10 @@ internal int random_powerdown(void) {
     return random_int_in_range(POWERUP_LAST + 1, POWER_COUNT - 1);
 }
 
+internal void increase_ball_size(Ball *ball) {
+    ball->half_size += .15f / ball->half_size;
+}
+
 internal void reset_and_reverse_ball_dp_y(Ball *ball) {
     if (ball->dp.y > 0) ball->dp.y = -ball->base_speed * ball->speed_multiplier;
     else ball->dp.y = ball->base_speed * ball->speed_multiplier;
@@ -152,7 +156,7 @@ internal void spawn_triple_shot_balls(void) {
         ball->p.y = player_visual_p.y + player_half_size.y;
         ball->dp.x = 45.f * (f32)(-1 * i%2);
         ball->dp.y = ball->base_speed;
-        ball->half_size = (v2){.75, .75};
+        ball->half_size = .75;
         ball->speed_multiplier = balls[0].speed_multiplier;
         ball->flags = BALL_ACTIVE | BALL_DESTROYED_ON_DP_Y_DOWN;
     }
@@ -198,14 +202,16 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
 
     diff.y = ball->collision_test_p.y - ball->p.y;
     if (diff.y != 0) {
-        if (ball->dp.y > 0) collision_point.y = block->p.y - block->half_size.y - ball->half_size.y;
-        else collision_point.y = block->p.y + block->half_size.y + ball->half_size.y;
+        if (ball->dp.y > 0) collision_point.y = block->p.y - block->half_size.y - ball->half_size;
+        else collision_point.y = block->p.y + block->half_size.y + ball->half_size;
 
         t.y = (collision_point.y - ball->p.y) / diff.y;
         if (t.y >= 0.f && t.y <= 1.f) {
             target.x = lerp(ball->p.x, t.y, ball->collision_test_p.x);
-            if (target.x + ball->half_size.x > block->p.x - block->half_size.x &&
-                target.x - ball->half_size.x < block->p.x + block->half_size.x) {
+            if (target.x + ball->half_size > block->p.x - block->half_size.x &&
+                target.x - ball->half_size < block->p.x + block->half_size.x) {
+                increase_ball_size(ball);
+
                 ball->desired_p.y = lerp(ball->p.y, t.y, ball->collision_test_p.y);
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
 
@@ -227,14 +233,16 @@ internal b32 do_ball_block_collision(Ball *ball, Block *block) {
     }
     diff.x = ball->collision_test_p.x - ball->p.x;
     if (diff.x != 0) {
-        if (ball->dp.x > 0) collision_point.x = block->p.x - block->half_size.x - ball->half_size.x;
-        else collision_point.x = block->p.x + block->half_size.x + ball->half_size.x;
+        if (ball->dp.x > 0) collision_point.x = block->p.x - block->half_size.x - ball->half_size;
+        else collision_point.x = block->p.x + block->half_size.x + ball->half_size;
 
         t.x = (collision_point.x - ball->p.x) / diff.x;
         if (t.x >= 0.f && t.x <= 1.f) {
             target.y = lerp(ball->p.y, t.x, ball->collision_test_p.y);
-            if (target.y + ball->half_size.y > block->p.y - block->half_size.y &&
-                target.y - ball->half_size.y < block->p.y + block->half_size.y) {
+            if (target.y + ball->half_size > block->p.y - block->half_size.y &&
+                target.y - ball->half_size < block->p.y + block->half_size.y) {
+                increase_ball_size(ball);
+
                 ball->desired_p.x = lerp(ball->p.x, t.x, ball->collision_test_p.x);
                 ball->dp.x *= -1;
                 if (block->ball_speed_multiplier > ball->speed_multiplier) ball->speed_multiplier = block->ball_speed_multiplier;
@@ -460,7 +468,7 @@ inline void init_ball(Ball *ball) {
     ball->p.y = 40;
     ball->dp.x = 0.f;
     ball->dp.y = -ball->base_speed;
-    ball->half_size = (v2){.75, .75};
+    ball->half_size = .75;
     ball->speed_multiplier = 1.f;
     ball->flags |= BALL_ACTIVE;
     ball->desired_p = ball->p;
@@ -697,8 +705,9 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
     #endif
 
-        if (ball->dp.y < 0 && is_colliding(player_visual_p, player_half_size, ball->desired_p, ball->half_size)) {
+        if (ball->dp.y < 0 && is_colliding(player_visual_p, player_half_size, ball->desired_p, (v2){ball->half_size, ball->half_size})) {
             // Ball collision with player
+            increase_ball_size(ball);
             reset_and_reverse_ball_dp_y(ball);
             ball->dp.x = (ball->p.x - player_visual_p.x) * 7.5f;
             ball->dp.x += clampf(-25.f, player_target_dp.x * .5f, 25.f);
@@ -711,25 +720,28 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 number_of_triple_shots--;
                 spawn_triple_shot_balls();
             }
-        } else if (ball->desired_p.x + ball->half_size.x > arena_right_wall_visual_p) {
+        } else if (ball->desired_p.x + ball->half_size > arena_right_wall_visual_p) {
             // Ball collision with right border
-            ball->desired_p.x = arena_right_wall_visual_p - ball->half_size.x;
+            increase_ball_size(ball);
+            ball->desired_p.x = arena_right_wall_visual_p - ball->half_size;
             ball->dp.x = max(20, ball->dp.x);
             ball->dp.x *= -1;
             arena_right_wall_visual_dp = -30.f;
             spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, level_info[current_level].wall_color);
-        } else if (ball->desired_p.x - ball->half_size.x < arena_left_wall_visual_p) {
+        } else if (ball->desired_p.x - ball->half_size < arena_left_wall_visual_p) {
             // Ball collision with left border
-            ball->desired_p.x = arena_left_wall_visual_p + ball->half_size.x;
+            increase_ball_size(ball);
+            ball->desired_p.x = arena_left_wall_visual_p + ball->half_size;
             ball->dp.x *= -1;
             ball->dp.x = max(20, ball->dp.x);
             arena_left_wall_visual_dp = 30.f;
             spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, level_info[current_level].wall_color);
         }
 
-        if (ball->desired_p.y + ball->half_size.y > arena_top_wall_visual_p) {
+        if (ball->desired_p.y + ball->half_size > arena_top_wall_visual_p) {
             // Ball collision with top border
-            ball->desired_p.y = arena_top_wall_visual_p - ball->half_size.y;
+            increase_ball_size(ball);
+            ball->desired_p.y = arena_top_wall_visual_p - ball->half_size;
             ball->dp.y = max(20, ball->dp.y);
             reset_and_reverse_ball_dp_y(ball);
             arena_top_wall_visual_dp = -30.f;
@@ -737,7 +749,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, level_info[current_level].wall_color);
         }
 
-        if (ball->desired_p.y - ball->half_size.y < -50) {
+        if (ball->desired_p.y - ball->half_size < -50) {
             // Ball falling down
             if (invincibility_t <= 0) lose_life(game);    // LOST
             else reset_and_reverse_ball_dp_y(ball);                 // INVINCIBILITY
@@ -854,12 +866,15 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 color.b = 0x00;
             }
 
-            Particle *particle = spawn_particle(ball->p, dp, ball->half_size, life, 1.f, rgba_converter(color));
+            Particle *particle = spawn_particle(ball->p, dp, (v2){ball->half_size, ball->half_size}, life, 1.f, rgba_converter(color));
         }
 
-        if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, ball->half_size, RIVAL_A_COLOR);
-        else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, ball->half_size, RIVAL_B_COLOR);
-        else draw_rect(game, ball->p, ball->half_size, ball->color);
+        if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, (v2){ball->half_size, ball->half_size}, RIVAL_A_COLOR);
+        else if (ball->flags & BALL_RIVAL_B) draw_rect(game, ball->p, (v2){ball->half_size, ball->half_size}, RIVAL_B_COLOR);
+        else draw_rect(game, ball->p, (v2){ball->half_size, ball->half_size}, ball->color);
+
+        ball->half_size -= dt * 2.f;
+        if (ball->half_size < .75) ball->half_size = .75;
     }
 
     // Player render

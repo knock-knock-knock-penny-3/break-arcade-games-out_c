@@ -84,7 +84,7 @@ typedef struct {
 
     v2 p;
     v2 dp;
-    v2 half_size;
+    f32 half_size;
     u32 color;
 
     v2 collision_test_p;
