@@ -79,11 +79,11 @@ internal void spawn_particle_explosion(int count, v2 p, f32 dp_scale, f32 base_s
     }
 }
 
-internal int random_powerup() {
+internal int random_powerup(void) {
     return random_int_in_range(1, POWERUP_LAST);
 }
 
-internal int random_powerdown() {
+internal int random_powerdown(void) {
     return random_int_in_range(POWERUP_LAST + 1, POWER_COUNT - 1);
 }
 
@@ -113,7 +113,7 @@ internal void process_ball_when_dp_y_down(Ball *ball) {
     }
 }
 
-internal Block* get_next_available_block() {
+internal Block* get_next_available_block(void) {
     Block *result = blocks + num_blocks++;
     if (num_blocks >= array_count(blocks)) {
         num_blocks = 0;
@@ -121,7 +121,7 @@ internal Block* get_next_available_block() {
     return result;
 }
 
-internal Ball* get_next_available_ball_and_zero() {
+internal Ball* get_next_available_ball_and_zero(void) {
     for_each_ball {
         if (!(ball->flags & BALL_ACTIVE)) {
             zero_struct(*ball);
@@ -133,7 +133,7 @@ internal Ball* get_next_available_ball_and_zero() {
     return 0;
 }
 
-internal void spawn_triple_shot_balls() {
+internal void spawn_triple_shot_balls(void) {
     Ball *ball;
 
     for (int i = 0; i < 2; i++) {
@@ -160,9 +160,9 @@ internal void spawn_power_block(Power_Block_Kind kind, v2 p) {
 }
 
 internal void block_destroyed(Block *block, Ball *ball, b32 maybe_destroy_neighbours) {
-//    spawn_particle_explosion(20, block->p, 12.f, 1.5f, .15f, block->color);
-    Particle *block_particle = spawn_particle(block->p, 0.f, block->half_size, 1.f, 3.f, block->color);
-    block_particle->dp = sub_v2(ball->p, block->p);
+    spawn_particle_explosion(20, block->p, 12.f, 1.5f, .15f, block->color);
+    Particle *block_particle = spawn_particle(block->p, 0.f, block->half_size, 1.f, 5.f, block->color);
+    block_particle->dp = sub_v2(block->p, ball->p);
 
     test_for_win_condition();
 
@@ -283,7 +283,7 @@ internal void create_invader(v2 p) {
     }
 }
 
-internal void calculate_all_neighbours() {
+internal void calculate_all_neighbours(void) {
     for_each_block {
         if (!block->life) break;
 
@@ -335,7 +335,7 @@ void create_block_block(int num_x, int num_y, v2 relative_spacing, f32 x_offset,
     }
 }
 
-inline void test_for_win_condition() {
+inline void test_for_win_condition(void) {
     blocks_destroyed++;
     score += player_life + touchless_bonus++;
 
@@ -438,7 +438,7 @@ inline void lose_life(Game *game) {
     reset_power();
 }
 
-inline void reset_power() {
+inline void reset_power(void) {
     invincibility_t = 0.f;
     comet_t = 0.f;
     number_of_triple_shots = 0;
@@ -841,9 +841,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 color.b = 0x00;
                 life = 1.f;
 //                dp = 10.f;    //@AWESOME
-            }
-
-            if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) {
+            } else if (ball->flags & BALL_DESTROYED_ON_DP_Y_DOWN) {
                 color.r = 0xFF;
                 color.g = 0xFF;
                 color.b = 0x00;
