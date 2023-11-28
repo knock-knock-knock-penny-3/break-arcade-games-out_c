@@ -283,9 +283,6 @@ void draw_arena_rects(Game *game, v2 p, f32 left_most, f32 right_most, f32 half_
     int x1 = (int)(p.x + right_most);
     int y1 = (int)(p.y + half_size_y);
 
-#if DEVELOPMENT
-    clear_color = 0xFF665944;
-#endif
     draw_rect_in_pixels(game, 0, 0, x0, game->screen_size.y, clear_color);                      // left border
     draw_rect_in_pixels(game, x1, 0, game->screen_size.x, game->screen_size.y, clear_color);    // right border
     draw_rect_in_pixels(game, x0, y1, x1, game->screen_size.y, clear_color);                    // top border

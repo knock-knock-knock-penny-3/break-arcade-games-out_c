@@ -55,6 +55,13 @@ f32 dt_multiplier = 1.f;
 b32 advance_level = false;
 #endif
 
+Level_Info level_info[] = {
+    {0xFF551100, 0xFF220500}, // L01_NORMAL
+    {0xFF804001, 0xFFFF7D03}, // L02_WALL
+    {0xFF008080, 0xFF00FFFF}, // L05_PONG
+    {0xFF333333, 0xFF111111}, // L06_INVADERS
+};
+
 internal Particle* spawn_particle(v2 p, f32 dp_scale, v2 half_size, f32 life, f32 life_d, u32 color) {
     Particle *particle = particles + next_particle++;
     if (next_particle >= array_count(particles)) next_particle = 0;
@@ -122,7 +129,7 @@ internal Block* get_next_available_block(void) {
 }
 
 internal Ball* get_next_available_ball_and_zero(void) {
-    for_each_ball {
+    for (Ball *ball = balls; ball != balls + array_count(balls); ball++) {
         if (!(ball->flags & BALL_ACTIVE)) {
             zero_struct(*ball);
             return ball;
@@ -284,7 +291,7 @@ internal void create_invader(v2 p) {
 }
 
 internal void calculate_all_neighbours(void) {
-    for_each_block {
+    for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) break;
 
         for (Block *test_block = blocks; test_block  != blocks + array_count(blocks); test_block ++) {
@@ -500,7 +507,7 @@ inline void start_game(Game *game, Level level) {
 
     num_blocks = 0;
     blocks_destroyed = 0;
-    for_each_block {
+    for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         block->life = 0;
     }
 
@@ -588,7 +595,7 @@ inline void start_game(Game *game, Level level) {
             create_block_block(num_x, num_y, (v2){.05f, .05f}, 0.f, -30.f, block_half_size, 2.f, 0);
             level_state.pong.enemy_half_size.x = num_x * (block_half_size.x * 1.05f);
 
-            for_each_block {
+            for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
                 if (!block->life) continue;
 
                 if (random_choice(3)) {
@@ -680,7 +687,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     }
 
     // Update balls
-    for_each_ball {
+    for (Ball *ball = balls; ball != balls + array_count(balls); ball++) {
         if (!(ball->flags & BALL_ACTIVE)) continue;
         ball->desired_p = add_v2(ball->p, mul_v2(ball->dp, dt));
 
@@ -710,14 +717,14 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             ball->dp.x = max(20, ball->dp.x);
             ball->dp.x *= -1;
             arena_right_wall_visual_dp = -30.f;
-            spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, WALL_COLOR);
+            spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, level_info[current_level].wall_color);
         } else if (ball->desired_p.x - ball->half_size.x < arena_left_wall_visual_p) {
             // Ball collision with left border
             ball->desired_p.x = arena_left_wall_visual_p + ball->half_size.x;
             ball->dp.x *= -1;
             ball->dp.x = max(20, ball->dp.x);
             arena_left_wall_visual_dp = 30.f;
-            spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, WALL_COLOR);
+            spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, level_info[current_level].wall_color);
         }
 
         if (ball->desired_p.y + ball->half_size.y > arena_top_wall_visual_p) {
@@ -727,7 +734,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             reset_and_reverse_ball_dp_y(ball);
             arena_top_wall_visual_dp = -30.f;
             process_ball_when_dp_y_down(ball);
-            spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, WALL_COLOR);
+            spawn_particle_explosion(10, ball->desired_p, 8.f, 1.f, .15f, level_info[current_level].wall_color);
         }
 
         if (ball->desired_p.y - ball->half_size.y < -50) {
@@ -741,15 +748,15 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
     simulate_level(game, current_level, dt);
 
-    clear_arena_screen(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, arena_top_wall_visual_p, ARENA_COLOR);
+    clear_arena_screen(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, arena_top_wall_visual_p, level_info[current_level].arena_color);
 
-    for_each_block {
+    for (Block *block = blocks; block != blocks + array_count(blocks); block++) {
         if (!block->life) continue;
 
         simulate_block_for_level(game, block, current_level);
 
         if (!first_ball_movement) {
-            for_each_ball {
+            for (Ball *ball = balls; ball != balls + array_count(balls); ball++) {
                 if (!(ball->flags & BALL_ACTIVE)) continue;
                 do_ball_block_collision(ball, block);
             }
@@ -815,7 +822,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     }
 
     // Render balls
-    for_each_ball {
+    for (Ball *ball = balls; ball != balls + array_count(balls); ball++) {
         if (!(ball->flags & BALL_ACTIVE)) continue;
 
         ball->p = ball->desired_p;
@@ -882,7 +889,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         arena_top_wall_visual_dp += arena_top_wall_visual_ddp * dt;
         arena_top_wall_visual_p += arena_top_wall_visual_ddp * square(dt) * .5f + arena_top_wall_visual_dp * dt;
 
-        draw_arena_rects(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, arena_top_wall_visual_p, WALL_COLOR);
+        draw_arena_rects(game, game->arena_center, arena_left_wall_visual_p, arena_right_wall_visual_p, arena_top_wall_visual_p, level_info[current_level].wall_color);
     }
 
     if (comet_t > 0) comet_t -= dt;

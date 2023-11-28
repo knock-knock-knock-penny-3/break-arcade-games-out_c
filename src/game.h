@@ -14,9 +14,6 @@
 #define RIVAL_A_COLOR   0xFFFF8934
 #define RIVAL_B_COLOR   0xFF3478FF
 
-#define ARENA_COLOR 0xFF551100
-#define WALL_COLOR  0xFF220500
-
 typedef enum {
     L01_NORMAL,
     L02_WALL,
@@ -120,6 +117,11 @@ typedef struct {
         Level_Invaders_State invaders;
     };
 } Level_State;
+
+typedef struct {
+    u32 arena_color;
+    u32 wall_color;
+} Level_Info;
 
 // PROTOTYPES
 void simulate_game(Game *, Input *, f64);
