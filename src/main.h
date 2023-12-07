@@ -1,7 +1,11 @@
 #ifndef BREAKOUT_MAIN_H_INCLUDED
 #define BREAKOUT_MAIN_H_INCLUDED
 
+#include <stdio.h>
+#include <math.h>
 #include "SDL2/SDL.h"
+#include "SDL2/SDL_image.h"
+#include "SDL2/SDL_rotozoom.h"
 #include "utils.h"
 #include "math.h"
 #include "software_rendering.h"

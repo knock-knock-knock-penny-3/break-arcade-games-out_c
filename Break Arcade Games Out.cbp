@@ -32,6 +32,9 @@
 			<Add option="-Wall" />
 			<Add option="-DDEVELOPMENT" />
 		</Compiler>
+		<Linker>
+			<Add option="-lm -lSDL2" />
+		</Linker>
 		<Unit filename="src/collision.c">
 			<Option compilerVar="CC" />
 		</Unit>

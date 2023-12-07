@@ -56,19 +56,20 @@ b32 advance_level = false;
 #endif
 
 Level_Info level_info[] = {
-    {0xFF551100, 0xFF220500}, // L01_NORMAL
-    {0xFF804001, 0xFFFF7D03}, // L02_WALL
-    {0xFF008080, 0xFF00FFFF}, // L05_PONG
-    {0xFF333333, 0xFF111111}, // L06_INVADERS
+    {0x551100FF, 0x220500FF}, // L01_NORMAL
+    {0x804001FF, 0xff7d03FF}, // L02_WALL
+    {0x008080FF, 0x00ffffFF}, // L05_PONG
+    {0x333333FF, 0x111111FF}, // L06_INVADERS
 };
 
-internal Particle* spawn_particle(v2 p, f32 dp_scale, v2 half_size, f32 life, f32 life_d, u32 color) {
+internal Particle* spawn_particle(v2 p, f32 dp_scale, v2 half_size, f32 angle, f32 life, f32 life_d, u32 color) {
     Particle *particle = particles + next_particle++;
     if (next_particle >= array_count(particles)) next_particle = 0;
 
     particle->p = p;
     particle->dp = (v2){random_bilateral() * dp_scale, random_bilateral() * dp_scale};
     particle->half_size = half_size;
+    particle->angle = angle;
     particle->life = life;
     particle->life_d = life_d;
     particle->max_life = life;
@@ -82,7 +83,7 @@ internal void spawn_particle_explosion(int count, v2 p, f32 dp_scale, f32 base_s
         base_size += random_bilateral() * base_size * .1f;
         base_life += random_bilateral() * base_life * .1f;
 
-        Particle *particle = spawn_particle(p, dp_scale, (v2){base_size, base_size}, base_life, 1.f, color);
+        Particle *particle = spawn_particle(p, dp_scale, (v2){base_size, base_size}, random_f32_in_range(0, 360), base_life, 1.f, color);
     }
 }
 
@@ -172,7 +173,7 @@ internal void spawn_power_block(Power_Block_Kind kind, v2 p) {
 
 internal void block_destroyed(Block *block, Ball *ball, b32 maybe_destroy_neighbours) {
     spawn_particle_explosion(20, block->p, 12.f, 1.5f, .15f, block->color);
-    Particle *block_particle = spawn_particle(block->p, 0.f, block->half_size, 1.f, 5.f, block->color);
+    Particle *block_particle = spawn_particle(block->p, 0.f, block->half_size, 0.f, 1.f, 5.f, block->color);
     block_particle->dp = sub_v2(block->p, ball->p);
 
     test_for_win_condition();
@@ -521,6 +522,7 @@ inline void start_game(Game *game, Level level) {
 
     switch (level) {
         case L01_NORMAL: {
+            invincibility_t = 5000.f;
             create_block_block(16, 7, (v2){.1f, .1f}, 0.f, 0.f, (v2){4.8f, 2.4f}, 1.f, 0);
         } break;
 
@@ -705,7 +707,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
         }
     #endif
 
-        if (ball->dp.y < 0 && is_colliding(player_visual_p, player_half_size, ball->desired_p, (v2){ball->half_size, ball->half_size})) {
+        if (ball->dp.y < 0 && aabb_vs_aabb(player_visual_p, player_half_size, ball->desired_p, (v2){ball->half_size, ball->half_size})) {
             // Ball collision with player
             increase_ball_size(ball);
             reset_and_reverse_ball_dp_y(ball);
@@ -782,7 +784,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
 
         power_block->p.y -= 15 * dt;
 
-        if (is_colliding(player_visual_p, player_half_size, power_block->p, power_block_half_size)) {
+        if (aabb_vs_aabb(player_visual_p, player_half_size, power_block->p, power_block_half_size)) {
             switch (power_block->kind) {
                 case POWER_INVINCIBILITY: {
                     invincibility_t += 5.f;
@@ -817,21 +819,25 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             power_block->kind = POWER_INACTIVE;
         }
 
-        if (power_block->kind <= POWERUP_LAST) draw_rect(game, power_block->p, power_block_half_size, 0xFFFFFF00);
-        else draw_rect(game, power_block->p, power_block_half_size, 0xFFFF0000);
+        if (power_block->kind <= POWERUP_LAST) draw_rect(game, power_block->p, power_block_half_size, 0xFFFF00FF);
+        else draw_rect(game, power_block->p, power_block_half_size, 0xFF0000FF);
     }
 
     // Render particles
+    int particles_count = 0;
     for (int i = 0; i < array_count(particles); i++) {
         Particle *particle= particles + i;
         if (particle->life <= 0.f) continue;
+        particles_count++;
 
         particle->life -= particle->life_d * dt;
         particle->p = add_v2(particle->p, mul_v2(particle->dp, dt));
 
         u8 alpha = map_into_range_normalized(0, particle->life, particle->max_life) * 255 * .5f;
         draw_rect(game, particle->p, particle->half_size, set_color(particle->color, alpha, ALPHA));
+//        draw_rotated_rect(game, particle->p, particle->half_size, particle->angle, set_color(particle->color, alpha, ALPHA));
     }
+    SDL_Log("Particles: %d", particles_count);
 
     // Render balls
     for (Ball *ball = balls; ball != balls + array_count(balls); ball++) {
@@ -866,7 +872,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
                 color.b = 0x00;
             }
 
-            Particle *particle = spawn_particle(ball->p, dp, (v2){ball->half_size, ball->half_size}, life, 1.f, rgba_converter(color));
+            f32 angle = get_vector_rotation(ball->dp);
+            Particle *particle = spawn_particle(ball->p, dp, (v2){ball->half_size, ball->half_size}, angle, life, 1.f, rgba_converter(color));
         }
 
         if (ball->flags & BALL_RIVAL_A) draw_rect(game, ball->p, (v2){ball->half_size, ball->half_size}, RIVAL_A_COLOR);
@@ -886,8 +893,8 @@ void simulate_game(Game *game, Input *input, f64 dt) {
             invincibility_t -= dt;
             draw_rect(game, player_visual_p, player_half_size, 0xFFFFFFFF);
         }
-        else draw_rect(game, player_visual_p, player_half_size, 0xFF00FF00);
-//        draw_rect(game, player_target_p, player_half_size, 0xFF00FF00); // player without spring effect
+        else draw_rect(game, player_visual_p, player_half_size, 0x00FF00FF);
+//        draw_rect(game, player_target_p, player_half_size, 0x00FF00FF); // player without spring effect
     }
 
     // Wall movements
@@ -927,6 +934,7 @@ void simulate_game(Game *game, Input *input, f64 dt) {
     if released(BUTTON_DOWN) dt_multiplier = 1.f;
 #endif
 
+    // CONSOLE
     draw_messages(game, dt);
 }
 

@@ -11,8 +11,8 @@
 #define BLOCK_RIVAL_A               0x1
 #define BLOCK_RIVAL_B               0x2
 
-#define RIVAL_A_COLOR   0xFFFF8934
-#define RIVAL_B_COLOR   0xFF3478FF
+#define RIVAL_A_COLOR   0xFF8934FF
+#define RIVAL_B_COLOR   0x3478FFFF
 
 typedef enum {
     L01_NORMAL,
@@ -72,6 +72,7 @@ typedef struct {
     v2 p;
     v2 dp;
     v2 half_size;
+    f32 angle;
 
     f32 life;
     f32 life_d;

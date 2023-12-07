@@ -55,6 +55,7 @@ typedef struct {
     v2 arena_half_size;
     v2 arena_center;
 
+    SDL_Window *window;
     SDL_Renderer *renderer;
 } Game;
 
@@ -81,5 +82,10 @@ internal void zero_size(void* mem, u64 size) {
 }
 #define zero_array(a) zero_size(a, sizeof(a))
 #define zero_struct(s) zero_size(&(s), sizeof(s))
+
+#define RMASK   0xFF000000
+#define GMASK   0x00FF0000
+#define BMASK   0x0000FF00
+#define AMASK   0x000000FF
 
 #endif // BREAKOUT_UTILS_H_INCLUDED

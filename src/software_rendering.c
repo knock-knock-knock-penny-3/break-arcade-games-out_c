@@ -1,16 +1,24 @@
-#include "SDL2/SDL.h"
 #include "main.h"
 #include "software_rendering.h"
 
 f32 scale = 0.01f;
 
+void rgba_debug(u32 color, RGBA rgba) {
+    SDL_Log("COLOR: %x", color);
+    SDL_Log("R: %x (%d)", rgba.r, rgba.r);
+    SDL_Log("G: %x (%d)", rgba.g, rgba.g);
+    SDL_Log("B: %x (%d)", rgba.b, rgba.b);
+    SDL_Log("A: %x (%d)", rgba.a, rgba.a);
+    SDL_Log("-------------------------------------------");
+}
+
 RGBA color_converter(u32 hexValue) {
     RGBA rgba;
 
-    rgba.a = ((hexValue >> 24) & 0xFF);
-    rgba.r = ((hexValue >> 16) & 0xFF);
-    rgba.g = ((hexValue >> 8) & 0xFF);
-    rgba.b = (hexValue & 0xFF);
+    rgba.r = ((hexValue >> 24) & 0xFF);
+    rgba.g = ((hexValue >> 16) & 0xFF);
+    rgba.b = ((hexValue >> 8) & 0xFF);
+    rgba.a = (hexValue & 0xFF);
 
     return rgba;
 }
@@ -18,10 +26,10 @@ RGBA color_converter(u32 hexValue) {
 u32 rgba_converter(RGBA rgba) {
     u32 color = 0xFF;
 
-    color = (color << 8) | rgba.a;
     color = (color << 8) | rgba.r;
     color = (color << 8) | rgba.g;
     color = (color << 8) | rgba.b;
+    color = (color << 8) | rgba.a;
 
     return color;
 }
@@ -63,22 +71,6 @@ void clear_screen(Game *game, u32 color) {
 
     // Clear the screen (to the selected color)
     SDL_RenderClear(game->renderer);
-}
-
-void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) {
-    RGBA rgba = color_converter(color);
-
-    // Set the drawing color
-    SDL_SetRenderDrawColor(game->renderer, rgba.r, rgba.g, rgba.b, rgba.a);
-
-    // Draw a rectangle of the selected color
-    x0 = clamp(0, x0, game->screen_size.x);
-    x1 = clamp(0, x1, game->screen_size.x);
-    y0 = clamp(0, y0, game->screen_size.y);
-    y1 = clamp(0, y1, game->screen_size.y);
-
-    SDL_Rect rect = {x0, game->screen_size.y - y1, x1-x0, y1-y0};
-    SDL_RenderFillRect(game->renderer, &rect);
 }
 
 inline void draw_number(Game *game, int number, v2 p, f32 size, u32 color) {
@@ -227,6 +219,22 @@ f32 calculate_aspect_multiplier(Game *game) {
     return aspect_multiplier;
 }
 
+void draw_rect_in_pixels(Game *game, int x0, int y0, int x1, int y1, u32 color) {
+    RGBA rgba = color_converter(color);
+
+    // Set the drawing color
+    SDL_SetRenderDrawColor(game->renderer, rgba.r, rgba.g, rgba.b, rgba.a);
+
+    // Draw a rectangle of the selected color
+    x0 = clamp(0, x0, game->screen_size.x);
+    x1 = clamp(0, x1, game->screen_size.x);
+    y0 = clamp(0, y0, game->screen_size.y);
+    y1 = clamp(0, y1, game->screen_size.y);
+
+    SDL_Rect rect = {x0, game->screen_size.y - y1, x1-x0, y1-y0};
+    SDL_RenderFillRect(game->renderer, &rect);
+}
+
 void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
     f32 aspect_multiplier = calculate_aspect_multiplier(game);
 
@@ -244,6 +252,52 @@ void draw_rect(Game *game, v2 p, v2 half_size, u32 color) {
     int y1 = (int)(p.y + half_size.y);
 
     draw_rect_in_pixels(game, x0, y0, x1, y1, color);
+}
+
+void draw_rotated_rect(Game *game, v2 p, v2 half_size, f32 angle, u32 color) {  // In degrees
+    f32 aspect_multiplier = calculate_aspect_multiplier(game);
+
+    half_size.x *= aspect_multiplier * scale;
+    half_size.y *= aspect_multiplier * scale;
+
+    p.x *= aspect_multiplier * scale;
+    p.y *= aspect_multiplier * scale;
+
+    p = add_v2(p, game->screen_center);
+
+    f32 x0 = p.x - half_size.x;
+    f32 y0 = p.y - half_size.y;
+    f32 x1 = p.x + half_size.x;
+    f32 y1 = p.y + half_size.y;
+
+    // draw_rect_in_pixels(game, x0, y0, x1, y1, color);
+    RGBA rgba = color_converter(color);
+
+    // Set the drawing color
+    SDL_SetRenderDrawColor(game->renderer, rgba.r, rgba.g, rgba.b, rgba.a);
+
+    // Draw a rectangle of the selected color
+    int ix0 = clamp(0, (int)x0, game->screen_size.x);
+    int ix1 = clamp(0, (int)x1, game->screen_size.x);
+    int iy0 = clamp(0, (int)y0, game->screen_size.y);
+    int iy1 = clamp(0, (int)y1, game->screen_size.y);
+
+    SDL_Surface *surface = SDL_CreateRGBSurface(0, ix1-ix0, iy1-iy0, 32, RMASK, GMASK, BMASK, AMASK);
+    int fillrect = SDL_FillRect(surface, NULL, color);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(game->renderer, surface);
+    SDL_FreeSurface(surface);
+
+    SDL_Rect rect = {ix0, game->screen_size.y - iy1, ix1-ix0, iy1-iy0};
+
+    SDL_RenderCopyEx(
+        game->renderer,
+        texture,
+        NULL,
+        &rect,
+        angle,
+        &(SDL_Point){half_size.x, half_size.y},
+        SDL_FLIP_NONE
+    );
 }
 
 void clear_arena_screen(Game *game, v2 p, f32 left_most, f32 right_most, f32 half_size_y, u32 color) {

@@ -1,15 +1,13 @@
-#include <stdio.h>
 #include "main.h"
 
 int main() {
-    SDL_Window *window;
     Game game;
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("error initializing SDL: %s\n", SDL_GetError());
     }
 
-    window = SDL_CreateWindow(
+    game.window = SDL_CreateWindow(
                                 WINDOW_TITLE,               // window title
                                 SDL_WINDOWPOS_CENTERED,     // initial x position
                                 SDL_WINDOWPOS_CENTERED,     // initial y position
@@ -17,14 +15,14 @@ int main() {
                                 SCREEN_HEIGHT,              // height, in pixels
                                 SDL_WINDOW_RESIZABLE        // flags
                             );
-    if (!window) {
+    if (!game.window) {
         printf("error creating window: %s\n", SDL_GetError());
     }
 
-    game.renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    game.renderer = SDL_CreateRenderer(game.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (!game.renderer) {
         printf("error creating renderer");
-        SDL_DestroyWindow(window);
+        SDL_DestroyWindow(game.window);
         SDL_Quit();
     }
     set_screen(&game, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -34,7 +32,7 @@ int main() {
     Input input = {0};
 
     SDL_ShowCursor(SDL_DISABLE);
-    SDL_WarpMouseInWindow(window, game.screen_center.x, game.screen_center.y);
+    SDL_WarpMouseInWindow(game.window, game.screen_center.x, game.screen_center.y);
 
     u32 last_counter = SDL_GetPerformanceCounter();
     f64 last_dt = 0.01666f;  // 60 FPS
@@ -50,10 +48,10 @@ int main() {
             switch (event.type) {
                 case SDL_WINDOWEVENT_CLOSE:
                 case SDL_QUIT: {
-                    if (window) {
+                    if (game.window) {
                         // Close and destroy the window
-                        SDL_DestroyWindow(window);
-                        window = NULL;
+                        SDL_DestroyWindow(game.window);
+                        game.window = NULL;
                     }
                     running = false;
                 } break;
@@ -100,8 +98,8 @@ input.buttons[b].is_down = state[vk];
 
         input.mouse_dp = sub_v2i(mouse_pointer, v2_to_v2i(game.screen_center));
 
-        if (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) {
-            SDL_WarpMouseInWindow(window, game.screen_center.x, game.screen_center.y);
+        if (SDL_GetWindowFlags(game.window) & SDL_WINDOW_INPUT_FOCUS) {
+            SDL_WarpMouseInWindow(game.window, game.screen_center.x, game.screen_center.y);
         }
 
         // Simulation
@@ -114,10 +112,11 @@ input.buttons[b].is_down = state[vk];
         u32 current_counter = SDL_GetPerformanceCounter();
         last_dt = min(.1f, (f64)((current_counter - last_counter) / (f64)SDL_GetPerformanceFrequency()));
         last_counter = current_counter;
+        print_int((int)1/last_dt, 0xFFFFFFFF);
     }
 
     SDL_DestroyRenderer(game.renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyWindow(game.window);
 
     SDL_Quit();
 
